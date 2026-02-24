@@ -26,8 +26,16 @@ def analyze_sentiment_and_keywords(tweets_or_reviews):
     for the portfolio demo, we'll use a basic dictionary approach for Indo + textblob.
     """
     
-    indo_pos = ['bagus', 'keren', 'mantap', 'suka', 'terbaik', 'baik', 'membantu', 'mudah', 'lancar', 'cepat', 'good', 'love', 'nice']
-    indo_neg = ['jelek', 'buruk', 'error', 'lambat', 'susah', 'berat', 'ngebug', 'bug', 'kecewa', 'kurang', 'iklan', 'bad', 'slow']
+    indo_pos = [
+        'bagus', 'keren', 'mantap', 'suka', 'terbaik', 'baik', 'membantu', 'mudah', 'lancar', 'cepat', 
+        'good', 'love', 'nice', 'bermanfaat', 'informatif', 'lucu', 'edukatif', 'semangat', 'menarik', 
+        'inspirasi', 'berguna', 'rekomendasi', 'kece', 'setuju', 'keren', 'keren banget', 'makasih', 
+        'terima kasih', 'thanks', 'sip', 'jos', 'top', 'keren bgt', 'mantul'
+    ]
+    indo_neg = [
+        'jelek', 'buruk', 'error', 'lambat', 'susah', 'berat', 'ngebug', 'bug', 'kecewa', 'kurang', 
+        'iklan', 'bad', 'slow', 'kecewa', 'parah', 'hancur', 'rusak', 'sampah', 'penipu', 'bohong'
+    ]
 
     pos_count = 0
     neg_count = 0
@@ -56,6 +64,9 @@ def analyze_sentiment_and_keywords(tweets_or_reviews):
             'seperti', 'setiap', 'lebih', 'cuma', 'hanya', 'bikin', 'malah', 'jangan', 'belum',
             'terus', 'emang', 'gimana', 'kenapa', 'kapan', 'dimana', 'siapa', 'mana', 'apa', 'dulu',
             'waktu', 'pas', 'sekali', 'tolong', 'mohon', 'banyak', 'sekarang', 'tiap', 'per', 'ke',
+            'kita', 'oleh', 'bagi', 'sebab', 'agar', 'supaya', 'meski', 'jika', 'sejak', 'hingga',
+            'serta', 'yaitu', 'yakni', 'adalah', 'ialah', 'merupakan', 'secara', 'paling', 'agak',
+            'biasa', 'tersebut', 'yakni', 'kok', 'loh', 'nah', 'hal', 'gitu', 'amat', 'tuh',
             # English
             'the', 'a', 'is', 'to', 'and', 'of', 'in', 'it', 'for', 'on', 'with', 'as', 'at',
             'by', 'an', 'be', 'this', 'that', 'are', 'was', 'were', 'been', 'have', 'has', 'had',
@@ -97,7 +108,7 @@ def analyze_sentiment_and_keywords(tweets_or_reviews):
             tb = TextBlob(text)
             tb_pol = tb.sentiment.polarity
             
-            if score > 0 or tb_pol > 0.1:
+            if score > 0 or tb_pol > 0.05:
                 sentiment = 'pos'
                 pos_count += 1
             elif score < 0 or tb_pol < -0.1:
