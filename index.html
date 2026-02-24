@@ -1053,184 +1053,182 @@
     <div class="container">
         <!-- URL INPUT FOR SCRAPING SIMULATION -->
         <div class="url-input-container">
-            <div class="url-input-wrapper">
-                <i class="fa-solid fa-link"></i>
-                <input type="text" class="url-input" id="post-url"
-                    placeholder="Masukkan URL postingan/aplikasi untuk dianalisa (PlayStore, YouTube, Reddit, Twitter, IG)...">
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <button class="analyze-btn" id="start-analysis-btn">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Analisa Sekarang
-                </button>
-                <button class="analyze-btn" id="reset-analysis-btn"
-                    style="background: rgba(255,255,255,0.1); color: var(--text-color); border: 1px solid var(--glass-border); display: none;">
-                    <i class="fa-solid fa-rotate-left"></i> Reset
-                </button>
-            </div>
+            <input type="text" class="url-input" id="post-url"
+                placeholder="Masukkan URL postingan/aplikasi untuk dianalisa (PlayStore, YouTube, Reddit, Twitter, IG)...">
         </div>
-
-        <!-- SELECTED PLATFORM INDICATOR -->
-        <div id="detected-platform"
-            style="text-align: center; margin-bottom: 20px; font-weight: 700; color: var(--text-muted); opacity: 0; transition: 0.3s; font-size: 1.1rem;">
-            <!-- Will show: Menganalisa data dari: Twitter -->
+        <div style="display: flex; gap: 10px;">
+            <button class="analyze-btn" id="start-analysis-btn">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Analisa Sekarang
+            </button>
+            <button class="analyze-btn" id="reset-analysis-btn"
+                style="background: rgba(255,255,255,0.1); color: var(--text-color); border: 1px solid var(--glass-border); display: none;">
+                <i class="fa-solid fa-rotate-left"></i> Reset
+            </button>
         </div>
+    </div>
 
-        <!-- KPIs -->
-        <div class="kpi-grid">
-            <div class="kpi-card kpi-total">
-                <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
-                <div class="kpi-title">Total Data</div>
-                <div class="kpi-value" id="kpi-total-val">0</div>
-            </div>
-            <div class="kpi-card kpi-pos">
-                <div class="kpi-icon"><i class="fa-regular fa-face-smile"></i></div>
-                <div class="kpi-title">Positif</div>
-                <div class="kpi-value" id="kpi-pos-val">0%</div>
-            </div>
-            <div class="kpi-card kpi-neu">
-                <div class="kpi-icon"><i class="fa-regular fa-face-meh"></i></div>
-                <div class="kpi-title">Netral</div>
-                <div class="kpi-value" id="kpi-neu-val">0%</div>
-            </div>
-            <div class="kpi-card kpi-neg">
-                <div class="kpi-icon"><i class="fa-regular fa-face-frown"></i></div>
-                <div class="kpi-title">Negatif</div>
-                <div class="kpi-value" id="kpi-neg-val">0%</div>
-            </div>
+    <!-- SELECTED PLATFORM INDICATOR -->
+    <div id="detected-platform"
+        style="text-align: center; margin-bottom: 20px; font-weight: 700; color: var(--text-muted); opacity: 0; transition: 0.3s; font-size: 1.1rem;">
+        <!-- Will show: Menganalisa data dari: Twitter -->
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+        <div class="kpi-card kpi-total">
+            <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="kpi-title">Total Data</div>
+            <div class="kpi-value" id="kpi-total-val">0</div>
         </div>
-
-        <!-- CHARTS SECTION -->
-        <div class="charts-grid">
-            <!-- Sentiment Trend -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <div class="chart-title"><i class="fa-solid fa-chart-line"></i> Tren Sentimen Harian</div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="trendChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Sentiment Distribution -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <div class="chart-title"><i class="fa-solid fa-chart-pie"></i> Distribusi Sentimen</div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="distChart"></canvas>
-                </div>
-            </div>
+        <div class="kpi-card kpi-pos">
+            <div class="kpi-icon"><i class="fa-regular fa-face-smile"></i></div>
+            <div class="kpi-title">Positif</div>
+            <div class="kpi-value" id="kpi-pos-val">0%</div>
         </div>
-
-        <!-- INSIGHT AI -->
-        <div class="insight-box" id="insight-box" style="display: none;">
-            <div class="insight-icon"><i class="fa-solid fa-robot"></i></div>
-            <div class="insight-text" id="insight-text">Memuat wawasan...</div>
+        <div class="kpi-card kpi-neu">
+            <div class="kpi-icon"><i class="fa-regular fa-face-meh"></i></div>
+            <div class="kpi-title">Netral</div>
+            <div class="kpi-value" id="kpi-neu-val">0%</div>
         </div>
-
-        <!-- EXTRA STATISTICS -->
-        <div class="stats-grid" id="stats-grid" style="display: none;">
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-align-left"></i></div>
-                <div class="stat-label">Rata-rata Panjang <span class="tooltip-icon"
-                        data-tip="Rata-rata jumlah kata per ulasan">?</span></div>
-                <div class="stat-value" id="stat-avg-len">-</div>
-                <div class="stat-desc">kata per ulasan</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-trophy"></i></div>
-                <div class="stat-label">Sentimen Dominan <span class="tooltip-icon"
-                        data-tip="Kategori sentimen yang paling sering muncul">?</span></div>
-                <div class="stat-value" id="stat-dominant">-</div>
-                <div class="stat-desc" id="stat-dominant-desc">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-user-group"></i></div>
-                <div class="stat-label">Penulis Unik <span class="tooltip-icon"
-                        data-tip="Jumlah penulis yang berbeda">?</span></div>
-                <div class="stat-value" id="stat-unique-authors">-</div>
-                <div class="stat-desc">kontributor terdeteksi</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-list-ol"></i></div>
-                <div class="stat-label">Total Kata <span class="tooltip-icon"
-                        data-tip="Total akumulasi kata dari semua ulasan">?</span></div>
-                <div class="stat-value" id="stat-total-words">-</div>
-                <div class="stat-desc">kata dianalisis</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-arrows-left-right"></i></div>
-                <div class="stat-label">Ulasan Terpanjang <span class="tooltip-icon"
-                        data-tip="Jumlah kata pada ulasan terpanjang">?</span></div>
-                <div class="stat-value" id="stat-longest">-</div>
-                <div class="stat-desc" id="stat-longest-desc">kata</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-font"></i></div>
-                <div class="stat-label">Top Kata Kunci <span class="tooltip-icon"
-                        data-tip="Kata yang paling sering muncul di ulasan">?</span></div>
-                <div class="stat-value" id="stat-top-kw">-</div>
-                <div class="stat-desc" id="stat-top-kw-desc">-</div>
-            </div>
+        <div class="kpi-card kpi-neg">
+            <div class="kpi-icon"><i class="fa-regular fa-face-frown"></i></div>
+            <div class="kpi-title">Negatif</div>
+            <div class="kpi-value" id="kpi-neg-val">0%</div>
         </div>
+    </div>
 
-        <!-- RATING DISTRIBUTION (PlayStore only) -->
-        <div class="chart-card" id="rating-dist-card" style="display: none; margin-bottom: 25px;">
+    <!-- CHARTS SECTION -->
+    <div class="charts-grid">
+        <!-- Sentiment Trend -->
+        <div class="chart-card">
             <div class="chart-header">
-                <div class="chart-title"><i class="fa-solid fa-star" style="color: #fbbf24;"></i> Distribusi Rating
-                    Pengguna</div>
+                <div class="chart-title"><i class="fa-solid fa-chart-line"></i> Tren Sentimen Harian</div>
             </div>
-            <div id="rating-bars" style="padding: 10px 0;">
-                <!-- Rating bars injected here -->
+            <div class="chart-container">
+                <canvas id="trendChart"></canvas>
             </div>
         </div>
 
-        <!-- BOTTOM SECTION -->
-        <div class="charts-grid" style="grid-template-columns: 1fr;">
-            <!-- Text Mining Top Keywords -->
-            <div class="chart-card" id="export-keywords-card">
-                <div class="chart-header">
-                    <div class="chart-title"><i class="fa-solid fa-tags"></i> Top Keywords (Text Mining)</div>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button class="btn-icon" id="export-png-btn" title="Export to PNG"
-                            style="font-size: 0.85rem; border: 1px solid var(--glass-border); padding: 5px 10px; border-radius: 8px;">
-                            <i class="fa-solid fa-file-image"></i> PNG
-                        </button>
-                        <button class="btn-icon" id="export-csv-btn" title="Export to CSV"
-                            style="font-size: 0.85rem; border: 1px solid var(--glass-border); padding: 5px 10px; border-radius: 8px;">
-                            <i class="fa-solid fa-file-csv"></i> CSV
-                        </button>
-                        <button class="btn-icon" id="export-txt-btn" title="Export as TextBlob"
-                            style="font-size: 0.85rem; border: 1px solid var(--glass-border); padding: 5px 10px; border-radius: 8px;">
-                            <i class="fa-solid fa-file-lines"></i> TXT
-                        </button>
-                        <button class="btn-icon" id="export-cloud-btn" title="Export Word Cloud"
-                            style="font-size: 0.85rem; background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; border: none; padding: 5px 12px; border-radius: 8px; font-weight: 600;">
-                            <i class="fa-solid fa-cloud"></i> Word Cloud
-                        </button>
-                    </div>
-                </div>
-                <div class="keywords-container" id="keywords-container" style="background: transparent;">
-                    <!-- Keywords will be injected here -->
-                </div>
+        <!-- Sentiment Distribution -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title"><i class="fa-solid fa-chart-pie"></i> Distribusi Sentimen</div>
             </div>
+            <div class="chart-container">
+                <canvas id="distChart"></canvas>
+            </div>
+        </div>
+    </div>
 
-            <!-- Recent Reviews -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <div class="chart-title"><i class="fa-solid fa-comments"></i> Ulasan Terbaru </div>
-                </div>
-                <div class="reviews-list" id="reviews-list">
-                    <!-- Reviews will be injected here -->
-                </div>
-                <div style="text-align: center; margin-top: 15px;">
-                    <button id="view-more-reviews-btn" class="analyze-btn"
-                        style="display: none; margin: 0 auto; padding: 10px 20px; font-size: 0.9rem; background: transparent; border: 1px solid var(--glass-border); color: var(--text-color);">
-                        Lihat Lebih Banyak (<span id="more-reviews-count">0</span>)
+    <!-- INSIGHT AI -->
+    <div class="insight-box" id="insight-box" style="display: none;">
+        <div class="insight-icon"><i class="fa-solid fa-robot"></i></div>
+        <div class="insight-text" id="insight-text">Memuat wawasan...</div>
+    </div>
+
+    <!-- EXTRA STATISTICS -->
+    <div class="stats-grid" id="stats-grid" style="display: none;">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-align-left"></i></div>
+            <div class="stat-label">Rata-rata Panjang <span class="tooltip-icon"
+                    data-tip="Rata-rata jumlah kata per ulasan">?</span></div>
+            <div class="stat-value" id="stat-avg-len">-</div>
+            <div class="stat-desc">kata per ulasan</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-trophy"></i></div>
+            <div class="stat-label">Sentimen Dominan <span class="tooltip-icon"
+                    data-tip="Kategori sentimen yang paling sering muncul">?</span></div>
+            <div class="stat-value" id="stat-dominant">-</div>
+            <div class="stat-desc" id="stat-dominant-desc">-</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-user-group"></i></div>
+            <div class="stat-label">Penulis Unik <span class="tooltip-icon"
+                    data-tip="Jumlah penulis yang berbeda">?</span></div>
+            <div class="stat-value" id="stat-unique-authors">-</div>
+            <div class="stat-desc">kontributor terdeteksi</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-list-ol"></i></div>
+            <div class="stat-label">Total Kata <span class="tooltip-icon"
+                    data-tip="Total akumulasi kata dari semua ulasan">?</span></div>
+            <div class="stat-value" id="stat-total-words">-</div>
+            <div class="stat-desc">kata dianalisis</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-arrows-left-right"></i></div>
+            <div class="stat-label">Ulasan Terpanjang <span class="tooltip-icon"
+                    data-tip="Jumlah kata pada ulasan terpanjang">?</span></div>
+            <div class="stat-value" id="stat-longest">-</div>
+            <div class="stat-desc" id="stat-longest-desc">kata</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-font"></i></div>
+            <div class="stat-label">Top Kata Kunci <span class="tooltip-icon"
+                    data-tip="Kata yang paling sering muncul di ulasan">?</span></div>
+            <div class="stat-value" id="stat-top-kw">-</div>
+            <div class="stat-desc" id="stat-top-kw-desc">-</div>
+        </div>
+    </div>
+
+    <!-- RATING DISTRIBUTION (PlayStore only) -->
+    <div class="chart-card" id="rating-dist-card" style="display: none; margin-bottom: 25px;">
+        <div class="chart-header">
+            <div class="chart-title"><i class="fa-solid fa-star" style="color: #fbbf24;"></i> Distribusi Rating
+                Pengguna</div>
+        </div>
+        <div id="rating-bars" style="padding: 10px 0;">
+            <!-- Rating bars injected here -->
+        </div>
+    </div>
+
+    <!-- BOTTOM SECTION -->
+    <div class="charts-grid" style="grid-template-columns: 1fr;">
+        <!-- Text Mining Top Keywords -->
+        <div class="chart-card" id="export-keywords-card">
+            <div class="chart-header">
+                <div class="chart-title"><i class="fa-solid fa-tags"></i> Top Keywords (Text Mining)</div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn-icon" id="export-png-btn" title="Export to PNG"
+                        style="font-size: 0.85rem; border: 1px solid var(--glass-border); padding: 5px 10px; border-radius: 8px;">
+                        <i class="fa-solid fa-file-image"></i> PNG
+                    </button>
+                    <button class="btn-icon" id="export-csv-btn" title="Export to CSV"
+                        style="font-size: 0.85rem; border: 1px solid var(--glass-border); padding: 5px 10px; border-radius: 8px;">
+                        <i class="fa-solid fa-file-csv"></i> CSV
+                    </button>
+                    <button class="btn-icon" id="export-txt-btn" title="Export as TextBlob"
+                        style="font-size: 0.85rem; border: 1px solid var(--glass-border); padding: 5px 10px; border-radius: 8px;">
+                        <i class="fa-solid fa-file-lines"></i> TXT
+                    </button>
+                    <button class="btn-icon" id="export-cloud-btn" title="Export Word Cloud"
+                        style="font-size: 0.85rem; background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; border: none; padding: 5px 12px; border-radius: 8px; font-weight: 600;">
+                        <i class="fa-solid fa-cloud"></i> Word Cloud
                     </button>
                 </div>
             </div>
+            <div class="keywords-container" id="keywords-container" style="background: transparent;">
+                <!-- Keywords will be injected here -->
+            </div>
         </div>
+
+        <!-- Recent Reviews -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title"><i class="fa-solid fa-comments"></i> Ulasan Terbaru </div>
+            </div>
+            <div class="reviews-list" id="reviews-list">
+                <!-- Reviews will be injected here -->
+            </div>
+            <div style="text-align: center; margin-top: 15px;">
+                <button id="view-more-reviews-btn" class="analyze-btn"
+                    style="display: none; margin: 0 auto; padding: 10px 20px; font-size: 0.9rem; background: transparent; border: 1px solid var(--glass-border); color: var(--text-color);">
+                    Lihat Lebih Banyak (<span id="more-reviews-count">0</span>)
+                </button>
+            </div>
+        </div>
+    </div>
     </div>
 
     <!-- TERMINAL MODAL -->
@@ -1473,7 +1471,7 @@
                 const easeProgress = 1 - Math.pow(1 - progress, 3);
                 let current = Math.floor(easeProgress * (end - start) + start);
 
-                if (end > 1000) {
+                if (obj.id === 'kpi-total-val') {
                     obj.innerHTML = current.toLocaleString('id-ID');
                 } else {
                     obj.innerHTML = current + '%';
@@ -1482,7 +1480,7 @@
                 if (progress < 1) {
                     window.requestAnimationFrame(step);
                 } else {
-                    if (end > 1000) {
+                    if (obj.id === 'kpi-total-val') {
                         obj.innerHTML = end.toLocaleString('id-ID');
                     } else {
                         obj.innerHTML = end + '%';
