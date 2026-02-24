@@ -1583,7 +1583,10 @@
                     maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
                     plugins: {
-                        legend: { position: 'bottom' },
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: isLight ? '#1e293b' : '#f8fafc' }
+                        },
                         tooltip: {
                             backgroundColor: isLight ? 'rgba(255, 255, 255, 0.9)' : 'rgba(15, 23, 42, 0.9)',
                             titleColor: isLight ? '#1e293b' : '#f8fafc',
@@ -1609,7 +1612,12 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     cutout: '70%',
-                    plugins: { legend: { position: 'bottom' } }
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: isLight ? '#1e293b' : '#f8fafc' }
+                        }
+                    }
                 }
             });
         }
@@ -1805,16 +1813,24 @@
 
                 Chart.defaults.color = newTextColor;
                 [trendChart, distChart].forEach(chart => {
-                    chart.options.plugins.legend.labels.color = newTextColor;
-                    if (chart.options.scales) {
-                        chart.options.scales.x.grid.color = newGridColor;
-                        chart.options.scales.y.grid.color = newGridColor;
-                        chart.options.scales.x.ticks.color = newTextColor;
-                        chart.options.scales.y.ticks.color = newTextColor;
+                    if (chart.options.plugins.legend) {
+                        if (!chart.options.plugins.legend.labels) chart.options.plugins.legend.labels = {};
+                        chart.options.plugins.legend.labels.color = newTextColor;
                     }
-                    chart.options.plugins.tooltip.backgroundColor = isLight ? 'rgba(255,255,255,0.9)' : 'rgba(15,23,42,0.9)';
-                    chart.options.plugins.tooltip.titleColor = isLight ? '#1e293b' : '#f8fafc';
-                    chart.options.plugins.tooltip.bodyColor = isLight ? '#1e293b' : '#f8fafc';
+
+                    if (chart.options.scales) {
+                        Object.values(chart.options.scales).forEach(scale => {
+                            if (scale.grid) scale.grid.color = newGridColor;
+                            if (scale.ticks) scale.ticks.color = newTextColor;
+                        });
+                    }
+
+                    if (chart.options.plugins.tooltip) {
+                        chart.options.plugins.tooltip.backgroundColor = isLight ? 'rgba(255, 255, 255, 0.9)' : 'rgba(15, 23, 42, 0.9)';
+                        chart.options.plugins.tooltip.titleColor = isLight ? '#1e293b' : '#f8fafc';
+                        chart.options.plugins.tooltip.bodyColor = isLight ? '#1e293b' : '#f8fafc';
+                        chart.options.plugins.tooltip.borderColor = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+                    }
                     chart.update();
                 });
 
