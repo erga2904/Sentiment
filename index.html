@@ -1209,7 +1209,7 @@
             <div class="kpi-grid">
                 <div class="kpi-card kpi-total">
                     <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
-                    <div class="kpi-title">Total Data</div>
+                    <div class="kpi-title">Data Teranalisis</div>
                     <div class="kpi-value" id="kpi-total-val">0</div>
                 </div>
                 <div class="kpi-card kpi-pos">
@@ -1794,8 +1794,8 @@
             document.getElementById('settings-dot-close').addEventListener('click', () => settingsModal.classList.remove('active'));
 
             document.getElementById('save-settings-btn').addEventListener('click', () => {
-                scrapingLimit = document.getElementById('set-scrape-limit').value;
-                displayLimit = document.getElementById('set-display-limit').value;
+                scrapingLimit = parseInt(document.getElementById('set-scrape-limit').value) || 100;
+                displayLimit = parseInt(document.getElementById('set-display-limit').value) || 10;
                 sortBy = document.getElementById('set-sort-by').value;
                 localStorage.setItem('scrapeLimit', scrapingLimit);
                 localStorage.setItem('displayLimit', displayLimit);
@@ -1870,8 +1870,11 @@
                     const data = await resp.json();
                     if (data.error) throw new Error(data.error);
 
-                    termOutput.innerHTML += `<div class="log-line success">> Extraction successful: ${data.reviews.length} records retrieved.</div>`;
-                    termOutput.innerHTML += '<div class="log-line info">> Mapping sentiment landscape...</div>';
+                    termOutput.innerHTML += `<div class="log-line success">> Berhasil: ${data.reviews.length} data telah diunduh & dianalisa.</div>`;
+                    if (data.reviews.length < scrapingLimit) {
+                        termOutput.innerHTML += `<div class="log-line warning">> Info: Hanya berhasil mengambil ${data.reviews.length} data (platform membatasi akses cepat).</div>`;
+                    }
+                    termOutput.innerHTML += '<div class="log-line info">> Memetakan landscape sentimen...</div>';
 
                     setTimeout(() => {
                         document.body.classList.remove('hero-mode');
