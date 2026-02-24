@@ -195,13 +195,16 @@ def analyze_sentiment_and_keywords(tweets_or_reviews):
     return [pos_pct, neu_pct, neg_pct], keywords, recent_reviews, extra_stats
 
 def get_playstore_data(app_id, count=100):
+    # If count is 0, we treat it as "unlimited" with a high safety cap
+    target_count = count if count > 0 else 100000
+    
     try:
         result, continuation_token = reviews(
             app_id,
             lang='id', 
             country='id', 
             sort=Sort.NEWEST,
-            count=count
+            count=100 if count == 0 else min(count, 1000) # Initial batch size
         )
         
         # Format for analysis function
@@ -220,8 +223,8 @@ def get_playstore_data(app_id, count=100):
                 'rating': r.get('score', None)
             })
             
-        # Continuation loop if requested count exceeds what was retrieved
-        while len(formatted_reviews) < count:
+        # Continuation loop if requested count exceeds what was retrieved OR if unlimited
+        while len(formatted_reviews) < target_count:
             if not continuation_token:
                 break
             
@@ -235,7 +238,7 @@ def get_playstore_data(app_id, count=100):
                 break
                 
             for r in result_cont:
-                if len(formatted_reviews) >= count:
+                if len(formatted_reviews) >= target_count:
                     break
                 date_obj = r['at']
                 date_str = date_obj.strftime("%d %b %Y") if isinstance(date_obj, datetime) else str(date_obj)
@@ -261,6 +264,7 @@ def get_playstore_data(app_id, count=100):
         return None
 
 def get_youtube_data(url, count_req=100):
+    target_count = count_req if count_req > 0 else 100000
     try:
         from youtube_comment_downloader import YoutubeCommentDownloader
         downloader = YoutubeCommentDownloader()
@@ -269,7 +273,7 @@ def get_youtube_data(url, count_req=100):
         
         formatted_reviews = []
         for comment in generator:
-            if len(formatted_reviews) >= count_req:
+            if len(formatted_reviews) >= target_count:
                 break
             text = comment.get('text', '')
             if text:
@@ -294,6 +298,7 @@ def get_youtube_data(url, count_req=100):
         return None
 
 def get_reddit_data(url, count_req=100):
+    target_count = count_req if count_req > 0 else 100000
     try:
         clean_url = url.split('?')[0].rstrip('/')
         json_url = clean_url + '.json'
@@ -318,7 +323,7 @@ def get_reddit_data(url, count_req=100):
                         'author': comment.get('author', 'Anonymous'),
                         'date': 'Hari ini'
                     })
-            if len(formatted_reviews) >= count_req:
+            if len(formatted_reviews) >= target_count:
                 break
                 
         percentages, keywords, recent_reviews, extra_stats = analyze_sentiment_and_keywords(formatted_reviews)
