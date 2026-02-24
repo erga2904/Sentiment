@@ -189,7 +189,7 @@ def get_playstore_data(app_id):
             lang='id', # defaults to indonesian
             country='id', 
             sort=Sort.NEWEST,
-            count=100
+            count=500
         )
         
         # Format for analysis function
@@ -233,7 +233,7 @@ def get_youtube_data(url):
         formatted_reviews = []
         count = 0
         for comment in generator:
-            if count >= 100:
+            if count >= 500:
                 break
             text = comment.get('text', '')
             if text:
@@ -283,7 +283,7 @@ def get_reddit_data(url):
                         'author': comment.get('author', 'Anonymous'),
                         'date': 'Hari ini'
                     })
-            if len(formatted_reviews) >= 100:
+            if len(formatted_reviews) >= 200:
                 break
                 
         percentages, keywords, recent_reviews, extra_stats = analyze_sentiment_and_keywords(formatted_reviews)
