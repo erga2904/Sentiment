@@ -1402,10 +1402,10 @@
                 <div class="settings-grid">
                     <div class="setting-item">
                         <label>Batas Komentar (Scraping)</label>
-                        <input type="number" id="set-scrape-limit" class="setting-input" value="100" min="10"
+                        <input type="number" id="set-scrape-limit" class="setting-input" value="100" min="0"
                             max="100000">
-                        <small style="color: var(--text-muted); font-size: 0.75rem;">Mempengaruhi waktu pemuatan
-                            data.</small>
+                        <small style="color: var(--text-muted); font-size: 0.75rem;">Mempengaruhi waktu pemuatan.
+                            Gunakan <b>0</b> untuk <b>Tanpa Batas</b>.</small>
                     </div>
                     <div class="setting-item">
                         <label>Batas Tampil (Ulasan Terbaru)</label>
@@ -1860,7 +1860,10 @@
                 simModal.classList.add('active');
                 termOutput.innerHTML = '<div class="log-line system">> Menghubungkan ke secure-extraction pipeline...</div>';
                 termOutput.innerHTML += `<div class="log-line">> Target: ${url}</div>`;
-                if (scrapingLimit > 1000) {
+                if (scrapingLimit === 0) {
+                    termOutput.innerHTML += `<div class="log-line warning">> Mode Tanpa Batas Aktif: Mengambil SEMUA data yang tersedia...</div>`;
+                    termOutput.innerHTML += `<div class="log-line info">> Ini mungkin memakan waktu lebih lama tergantung volume platform.</div>`;
+                } else if (scrapingLimit > 1000) {
                     termOutput.innerHTML += `<div class="log-line warning">> Info: Deep Scrape Mode Aktif (${scrapingLimit} data).</div>`;
                     termOutput.innerHTML += `<div class="log-line info">> Proses ribuan data mungkin memakan waktu lebih lama. Mohon tetap di halaman ini...</div>`;
                 }
