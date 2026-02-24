@@ -1891,14 +1891,14 @@
                         loadDashboardData(data);
 
                         let plat = 'Global Source';
-                        let icon = 'fa-globe';
-                        if (url.includes('play.google')) { plat = 'Google Play Store'; icon = 'fa-google-play'; }
-                        else if (url.includes('youtube')) { plat = 'YouTube'; icon = 'fa-youtube'; }
-                        else if (url.includes('reddit')) { plat = 'Reddit'; icon = 'fa-reddit-alien'; }
+                        let icon = 'fa-solid fa-globe';
+                        if (url.includes('play.google')) { plat = 'Google Play Store'; icon = 'fa-brands fa-google-play'; }
+                        else if (url.includes('youtube')) { plat = 'YouTube'; icon = 'fa-brands fa-youtube'; }
+                        else if (url.includes('reddit')) { plat = 'Reddit'; icon = 'fa-brands fa-reddit-alien'; }
 
                         const platIndicator = document.getElementById('detected-platform');
                         platIndicator.style.opacity = '1';
-                        platIndicator.innerHTML = `<i class="fa-brands ${icon}"></i> Analisa Data dari: ${plat}`;
+                        platIndicator.innerHTML = `<i class="${icon}"></i> Analisa Data dari: ${plat}`;
 
                         document.getElementById('start-analysis-btn').style.display = 'none';
                         document.getElementById('reset-analysis-btn').style.display = 'inline-block';
