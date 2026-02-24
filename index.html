@@ -101,7 +101,7 @@
             top: 20px;
             margin: 0 auto 40px;
             width: 90%;
-            max-width: 1200px;
+            max-width: 850px;
             z-index: 5000;
             display: flex;
             justify-content: space-between;
@@ -149,10 +149,72 @@
             transform: scale(1.1);
         }
 
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            padding: 10px 0;
+        }
+
+        .setting-item {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .setting-item label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .setting-input {
+            background: var(--input-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            padding: 12px 15px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .setting-input:focus {
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+        }
+
+        .settings-footer {
+            margin-top: 25px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-save {
+            background: var(--accent-glow);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-save:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        /* --- CHART LEGEND FIX --- */
+        :root.light-mode .chart-card .legend-item span {
+            color: #1e293b !important;
+        }
+
         /* MAIN CONTAINER */
         .container {
             width: 90%;
-            max-width: 1000px;
+            max-width: 850px;
             margin: 0 auto 40px;
             transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -312,8 +374,8 @@
             top: 45%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 100%;
-            max-width: 800px;
+            width: 90%;
+            max-width: 750px;
         }
 
         body.hero-mode .url-input {
@@ -1112,6 +1174,9 @@
                 <i class="fa-solid fa-sun" style="display: none;" id="light-icon"></i>
                 <i class="fa-solid fa-moon" id="dark-icon"></i>
             </button>
+            <button class="btn-icon" id="settings-toggle" title="Settings">
+                <i class="fa-solid fa-gear"></i>
+            </button>
             <a href="index.html" class="btn-icon" title="Back to Home">
                 <i class="fa-solid fa-house"></i>
             </a>
@@ -1133,172 +1198,170 @@
                 </button>
             </div>
         </div>
-    </div>
+        <div id="dashboard-content">
+            <!-- SELECTED PLATFORM INDICATOR -->
+            <div id="detected-platform"
+                style="text-align: center; margin-bottom: 20px; font-weight: 700; color: var(--text-muted); opacity: 0; transition: 0.3s; font-size: 1.1rem;">
+                <!-- Will show: Menganalisa data dari: Twitter -->
+            </div>
 
-    <div id="dashboard-content">
-        <!-- SELECTED PLATFORM INDICATOR -->
-        <div id="detected-platform"
-            style="text-align: center; margin-bottom: 20px; font-weight: 700; color: var(--text-muted); opacity: 0; transition: 0.3s; font-size: 1.1rem;">
-            <!-- Will show: Menganalisa data dari: Twitter -->
-        </div>
+            <!-- KPIs -->
+            <div class="kpi-grid">
+                <div class="kpi-card kpi-total">
+                    <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
+                    <div class="kpi-title">Total Data</div>
+                    <div class="kpi-value" id="kpi-total-val">0</div>
+                </div>
+                <div class="kpi-card kpi-pos">
+                    <div class="kpi-icon"><i class="fa-regular fa-face-smile"></i></div>
+                    <div class="kpi-title">Positif</div>
+                    <div class="kpi-value" id="kpi-pos-val">0%</div>
+                </div>
+                <div class="kpi-card kpi-neu">
+                    <div class="kpi-icon"><i class="fa-regular fa-face-meh"></i></div>
+                    <div class="kpi-title">Netral</div>
+                    <div class="kpi-value" id="kpi-neu-val">0%</div>
+                </div>
+                <div class="kpi-card kpi-neg">
+                    <div class="kpi-icon"><i class="fa-regular fa-face-frown"></i></div>
+                    <div class="kpi-title">Negatif</div>
+                    <div class="kpi-value" id="kpi-neg-val">0%</div>
+                </div>
+            </div>
 
-        <!-- KPIs -->
-        <div class="kpi-grid">
-            <div class="kpi-card kpi-total">
-                <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
-                <div class="kpi-title">Total Data</div>
-                <div class="kpi-value" id="kpi-total-val">0</div>
-            </div>
-            <div class="kpi-card kpi-pos">
-                <div class="kpi-icon"><i class="fa-regular fa-face-smile"></i></div>
-                <div class="kpi-title">Positif</div>
-                <div class="kpi-value" id="kpi-pos-val">0%</div>
-            </div>
-            <div class="kpi-card kpi-neu">
-                <div class="kpi-icon"><i class="fa-regular fa-face-meh"></i></div>
-                <div class="kpi-title">Netral</div>
-                <div class="kpi-value" id="kpi-neu-val">0%</div>
-            </div>
-            <div class="kpi-card kpi-neg">
-                <div class="kpi-icon"><i class="fa-regular fa-face-frown"></i></div>
-                <div class="kpi-title">Negatif</div>
-                <div class="kpi-value" id="kpi-neg-val">0%</div>
-            </div>
-        </div>
+            <!-- CHARTS SECTION -->
+            <div class="charts-grid">
+                <!-- Sentiment Trend -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title"><i class="fa-solid fa-chart-line"></i> Tren Sentimen Harian</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
 
-        <!-- CHARTS SECTION -->
-        <div class="charts-grid">
-            <!-- Sentiment Trend -->
-            <div class="chart-card">
+                <!-- Sentiment Distribution -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title"><i class="fa-solid fa-chart-pie"></i> Distribusi Sentimen</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="distChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INSIGHT AI -->
+            <div class="insight-box" id="insight-box" style="display: none;">
+                <div class="insight-icon"><i class="fa-solid fa-robot"></i></div>
+                <div class="insight-text" id="insight-text">Memuat wawasan...</div>
+            </div>
+
+            <!-- EXTRA STATISTICS -->
+            <div class="stats-grid" id="stats-grid" style="display: none;">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-align-left"></i></div>
+                    <div class="stat-label">Rata-rata Panjang <span class="tooltip-icon"
+                            data-tip="Rata-rata jumlah kata per ulasan">?</span></div>
+                    <div class="stat-value" id="stat-avg-len">-</div>
+                    <div class="stat-desc">kata per ulasan</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-trophy"></i></div>
+                    <div class="stat-label">Sentimen Dominan <span class="tooltip-icon"
+                            data-tip="Kategori sentimen yang paling sering muncul">?</span></div>
+                    <div class="stat-value" id="stat-dominant">-</div>
+                    <div class="stat-desc" id="stat-dominant-desc">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-user-group"></i></div>
+                    <div class="stat-label">Penulis Unik <span class="tooltip-icon"
+                            data-tip="Jumlah penulis yang berbeda">?</span></div>
+                    <div class="stat-value" id="stat-unique-authors">-</div>
+                    <div class="stat-desc">kontributor terdeteksi</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-list-ol"></i></div>
+                    <div class="stat-label">Total Kata <span class="tooltip-icon"
+                            data-tip="Total akumulasi kata dari semua ulasan">?</span></div>
+                    <div class="stat-value" id="stat-total-words">-</div>
+                    <div class="stat-desc">kata dianalisis</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-arrows-left-right"></i></div>
+                    <div class="stat-label">Ulasan Terpanjang <span class="tooltip-icon"
+                            data-tip="Jumlah kata pada ulasan terpanjang">?</span></div>
+                    <div class="stat-value" id="stat-longest">-</div>
+                    <div class="stat-desc" id="stat-longest-desc">kata</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-font"></i></div>
+                    <div class="stat-label">Top Kata Kunci <span class="tooltip-icon"
+                            data-tip="Kata yang paling sering muncul di ulasan">?</span></div>
+                    <div class="stat-value" id="stat-top-kw">-</div>
+                    <div class="stat-desc" id="stat-top-kw-desc">-</div>
+                </div>
+            </div>
+
+            <!-- RATING DISTRIBUTION (PlayStore only) -->
+            <div class="chart-card" id="rating-dist-card" style="display: none; margin-bottom: 25px;">
                 <div class="chart-header">
-                    <div class="chart-title"><i class="fa-solid fa-chart-line"></i> Tren Sentimen Harian</div>
+                    <div class="chart-title"><i class="fa-solid fa-star" style="color: #fbbf24;"></i> Distribusi Rating
+                        Pengguna</div>
                 </div>
-                <div class="chart-container">
-                    <canvas id="trendChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Sentiment Distribution -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <div class="chart-title"><i class="fa-solid fa-chart-pie"></i> Distribusi Sentimen</div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="distChart"></canvas>
+                <div id="rating-bars" style="padding: 10px 0;">
+                    <!-- Rating bars injected here -->
                 </div>
             </div>
-        </div>
 
-        <!-- INSIGHT AI -->
-        <div class="insight-box" id="insight-box" style="display: none;">
-            <div class="insight-icon"><i class="fa-solid fa-robot"></i></div>
-            <div class="insight-text" id="insight-text">Memuat wawasan...</div>
-        </div>
+            <!-- BOTTOM SECTION -->
+            <div class="charts-grid" style="grid-template-columns: 1fr;">
+                <!-- Text Mining Top Keywords -->
+                <div class="chart-card" id="export-keywords-card">
+                    <div class="chart-header">
+                        <div class="chart-title"><i class="fa-solid fa-tags"></i> Top Keywords (Text Mining)</div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button class="btn-icon" id="export-png-btn" title="Export to PNG"
+                                style="font-size: 0.85rem; border: 1px solid var(--glass-border); padding: 5px 10px; border-radius: 8px;">
+                                <i class="fa-solid fa-file-image"></i> PNG
+                            </button>
+                            <button class="btn-icon" id="export-csv-btn" title="Export to CSV"
+                                style="font-size: 0.85rem; border: 1px solid var(--glass-border); padding: 5px 10px; border-radius: 8px;">
+                                <i class="fa-solid fa-file-csv"></i> CSV
+                            </button>
+                            <button class="btn-icon" id="export-txt-btn" title="Export as TextBlob"
+                                style="font-size: 0.85rem; border: 1px solid var(--glass-border); padding: 5px 10px; border-radius: 8px;">
+                                <i class="fa-solid fa-file-lines"></i> TXT
+                            </button>
+                            <button class="btn-icon" id="export-cloud-btn" title="Export Word Cloud"
+                                style="font-size: 0.85rem; background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; border: none; padding: 5px 12px; border-radius: 8px; font-weight: 600;">
+                                <i class="fa-solid fa-cloud"></i> Word Cloud
+                            </button>
+                        </div>
+                    </div>
+                    <div class="keywords-container" id="keywords-container" style="background: transparent;">
+                        <!-- Keywords will be injected here -->
+                    </div>
+                </div>
 
-        <!-- EXTRA STATISTICS -->
-        <div class="stats-grid" id="stats-grid" style="display: none;">
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-align-left"></i></div>
-                <div class="stat-label">Rata-rata Panjang <span class="tooltip-icon"
-                        data-tip="Rata-rata jumlah kata per ulasan">?</span></div>
-                <div class="stat-value" id="stat-avg-len">-</div>
-                <div class="stat-desc">kata per ulasan</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-trophy"></i></div>
-                <div class="stat-label">Sentimen Dominan <span class="tooltip-icon"
-                        data-tip="Kategori sentimen yang paling sering muncul">?</span></div>
-                <div class="stat-value" id="stat-dominant">-</div>
-                <div class="stat-desc" id="stat-dominant-desc">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-user-group"></i></div>
-                <div class="stat-label">Penulis Unik <span class="tooltip-icon"
-                        data-tip="Jumlah penulis yang berbeda">?</span></div>
-                <div class="stat-value" id="stat-unique-authors">-</div>
-                <div class="stat-desc">kontributor terdeteksi</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-list-ol"></i></div>
-                <div class="stat-label">Total Kata <span class="tooltip-icon"
-                        data-tip="Total akumulasi kata dari semua ulasan">?</span></div>
-                <div class="stat-value" id="stat-total-words">-</div>
-                <div class="stat-desc">kata dianalisis</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-arrows-left-right"></i></div>
-                <div class="stat-label">Ulasan Terpanjang <span class="tooltip-icon"
-                        data-tip="Jumlah kata pada ulasan terpanjang">?</span></div>
-                <div class="stat-value" id="stat-longest">-</div>
-                <div class="stat-desc" id="stat-longest-desc">kata</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-font"></i></div>
-                <div class="stat-label">Top Kata Kunci <span class="tooltip-icon"
-                        data-tip="Kata yang paling sering muncul di ulasan">?</span></div>
-                <div class="stat-value" id="stat-top-kw">-</div>
-                <div class="stat-desc" id="stat-top-kw-desc">-</div>
-            </div>
-        </div>
-
-        <!-- RATING DISTRIBUTION (PlayStore only) -->
-        <div class="chart-card" id="rating-dist-card" style="display: none; margin-bottom: 25px;">
-            <div class="chart-header">
-                <div class="chart-title"><i class="fa-solid fa-star" style="color: #fbbf24;"></i> Distribusi Rating
-                    Pengguna</div>
-            </div>
-            <div id="rating-bars" style="padding: 10px 0;">
-                <!-- Rating bars injected here -->
-            </div>
-        </div>
-
-        <!-- BOTTOM SECTION -->
-        <div class="charts-grid" style="grid-template-columns: 1fr;">
-            <!-- Text Mining Top Keywords -->
-            <div class="chart-card" id="export-keywords-card">
-                <div class="chart-header">
-                    <div class="chart-title"><i class="fa-solid fa-tags"></i> Top Keywords (Text Mining)</div>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button class="btn-icon" id="export-png-btn" title="Export to PNG"
-                            style="font-size: 0.85rem; border: 1px solid var(--glass-border); padding: 5px 10px; border-radius: 8px;">
-                            <i class="fa-solid fa-file-image"></i> PNG
-                        </button>
-                        <button class="btn-icon" id="export-csv-btn" title="Export to CSV"
-                            style="font-size: 0.85rem; border: 1px solid var(--glass-border); padding: 5px 10px; border-radius: 8px;">
-                            <i class="fa-solid fa-file-csv"></i> CSV
-                        </button>
-                        <button class="btn-icon" id="export-txt-btn" title="Export as TextBlob"
-                            style="font-size: 0.85rem; border: 1px solid var(--glass-border); padding: 5px 10px; border-radius: 8px;">
-                            <i class="fa-solid fa-file-lines"></i> TXT
-                        </button>
-                        <button class="btn-icon" id="export-cloud-btn" title="Export Word Cloud"
-                            style="font-size: 0.85rem; background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; border: none; padding: 5px 12px; border-radius: 8px; font-weight: 600;">
-                            <i class="fa-solid fa-cloud"></i> Word Cloud
+                <!-- Recent Reviews -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title"><i class="fa-solid fa-comments"></i> Ulasan Terbaru </div>
+                    </div>
+                    <div class="reviews-list" id="reviews-list">
+                        <!-- Reviews will be injected here -->
+                    </div>
+                    <div style="text-align: center; margin-top: 15px;">
+                        <button id="view-more-reviews-btn" class="analyze-btn"
+                            style="display: none; margin: 0 auto; padding: 10px 20px; font-size: 0.9rem; background: transparent; border: 1px solid var(--glass-border); color: var(--text-color);">
+                            Lihat Lebih Banyak (<span id="more-reviews-count">0</span>)
                         </button>
                     </div>
                 </div>
-                <div class="keywords-container" id="keywords-container" style="background: transparent;">
-                    <!-- Keywords will be injected here -->
-                </div>
-            </div>
-
-            <!-- Recent Reviews -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <div class="chart-title"><i class="fa-solid fa-comments"></i> Ulasan Terbaru </div>
-                </div>
-                <div class="reviews-list" id="reviews-list">
-                    <!-- Reviews will be injected here -->
-                </div>
-                <div style="text-align: center; margin-top: 15px;">
-                    <button id="view-more-reviews-btn" class="analyze-btn"
-                        style="display: none; margin: 0 auto; padding: 10px 20px; font-size: 0.9rem; background: transparent; border: 1px solid var(--glass-border); color: var(--text-color);">
-                        Lihat Lebih Banyak (<span id="more-reviews-count">0</span>)
-                    </button>
-                </div>
             </div>
         </div>
-    </div>
     </div>
 
     <!-- TERMINAL MODAL -->
@@ -1321,9 +1384,55 @@
         </div>
     </div>
 
+    <!-- SETTINGS MODAL -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="terminal-box" style="max-width: 450px;">
+            <div class="terminal-header">
+                <div class="terminal-dots">
+                    <div class="term-dot r" id="settings-dot-close"></div>
+                    <div class="term-dot y"></div>
+                    <div class="term-dot g"></div>
+                </div>
+                <div class="terminal-title">
+                    <i class="fa-solid fa-gear"></i> System Settings
+                </div>
+                <div style="width:40px;"></div>
+            </div>
+            <div class="terminal-body" style="height: auto; padding: 25px;">
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label>Batas Komentar (Scraping)</label>
+                        <input type="number" id="set-scrape-limit" class="setting-input" value="100" min="10"
+                            max="1000">
+                        <small style="color: var(--text-muted); font-size: 0.75rem;">Mempengaruhi waktu pemuatan
+                            data.</small>
+                    </div>
+                    <div class="setting-item">
+                        <label>Batas Tampil (Ulasan Terbaru)</label>
+                        <input type="number" id="set-display-limit" class="setting-input" value="10" min="1" max="100">
+                        <small style="color: var(--text-muted); font-size: 0.75rem;">Jumlah ulasan di dashboard
+                            utama.</small>
+                    </div>
+                    <div class="setting-item">
+                        <label>Urutkan Ulasan Berdasarkan</label>
+                        <select id="set-sort-by" class="setting-input">
+                            <option value="newest">Terbaru (Newest)</option>
+                            <option value="rating-high">Rating Tertinggi</option>
+                            <option value="rating-low">Rating Terendah</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="settings-footer">
+                    <button class="btn-save" id="save-settings-btn">Simpan Perubahan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- WORD CLOUD MODAL -->
     <div id="wordcloud-modal" class="modal-overlay" style="z-index: 30000;">
-        <div class="terminal-box" style="width: 800px; height: 600px; max-width: 95vw; max-height: 85vh; padding: 0;">
+        <div class="terminal-box"
+            style="width: 800px; height: 600px; max-width: 95vw; max-height: 85vh; padding: 0; display: flex; flex-direction: column;">
             <div class="terminal-header" style="background: rgba(0,0,0,0.2); justify-content: space-between;">
                 <div class="terminal-dots" style="display: flex; gap: 8px; margin-right: 15px;">
                     <div class="term-dot r" id="close-cloud-modal" title="Tutup"></div>
@@ -1331,13 +1440,18 @@
                     <div class="term-dot g"></div>
                 </div>
                 <div class="terminal-title"
-                    style="color: var(--text-color); font-weight: 700; font-family: inherit; flex: 1; text-align: center;">
+                    style="color: var(--text-main); font-weight: 700; font-family: inherit; flex: 1; text-align: center;">
                     <i class="fa-solid fa-cloud"></i> High-Res Word Cloud Visualization
                 </div>
                 <div style="width: 44px;"></div>
             </div>
-            <div class="terminal-body"
-                style="flex: 1; background: #0f172a; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
+            <div class="terminal-body" id="cloud-body"
+                style="flex: 1; background: #0f172a; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; position: relative;">
+                <div id="cloud-loading"
+                    style="position: absolute; display: none; flex-direction: column; align-items: center; gap: 10px; color: white; z-index: 10;">
+                    <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+                    <span>Generating Visualization...</span>
+                </div>
                 <canvas id="cloud-canvas" width="700" height="450"
                     style="max-width: 100%; height: auto; border-radius: 8px; background: #0f172a;"></canvas>
                 <div style="margin-top: 25px; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
@@ -1345,7 +1459,7 @@
                         <i class="fa-solid fa-file-arrow-down"></i> Simpan Sebagai PNG
                     </button>
                     <button id="regenerate-cloud-btn" class="analyze-btn"
-                        style="padding: 12px 25px; font-size: 0.95rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-color);">
+                        style="padding: 12px 25px; font-size: 0.95rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-main);">
                         <i class="fa-solid fa-shuffle"></i> Acak Posisi
                     </button>
                 </div>
@@ -1411,113 +1525,16 @@
         </div>
     </div>
 
-    <!-- JS LOGIC -->
     <script>
         // CONFIGURATION FOR DEPLOYMENT
-        // Ganti URL di bawah ini dengan URL backend Anda yang sudah di-deploy (misal di Render/Koyeb)
         const PRODUCTION_API_URL = "https://sentimentfix.vercel.app";
         const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? "http://localhost:5000"
             : PRODUCTION_API_URL;
 
-        // MOCK DATA FOR 3 APPS
+        // AUTHENTICATION PLACEHOLDERS
         const mockData = {
-            empty: {
-                total: 0,
-                percentages: [0, 0, 0],
-                trendData: {
-                    labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
-                    datasets: [
-                        { label: 'Positif', data: [0, 0, 0, 0, 0, 0, 0] },
-                        { label: 'Netral', data: [0, 0, 0, 0, 0, 0, 0] },
-                        { label: 'Negatif', data: [0, 0, 0, 0, 0, 0, 0] }
-                    ]
-                },
-                keywords: [],
-                reviews: []
-            },
-            twitter: {
-                total: 12543,
-                percentages: [45, 30, 25], // Pos, Neu, Neg
-                trendData: {
-                    labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
-                    datasets: [
-                        { label: 'Positif', data: [420, 450, 480, 520, 600, 750, 800] },
-                        { label: 'Netral', data: [310, 320, 315, 300, 310, 340, 350] },
-                        { label: 'Negatif', data: [280, 260, 250, 270, 240, 220, 200] }
-                    ]
-                },
-                keywords: [
-                    { word: 'update', count: 1250 },
-                    { word: 'cepat', count: 980 },
-                    { word: 'bagus', count: 850 },
-                    { word: 'error', count: 620 },
-                    { word: 'keren', count: 540 },
-                    { word: 'bug', count: 410 },
-                    { word: 'terbaik', count: 390 },
-                    { word: 'lambat', count: 310 }
-                ],
-                reviews: [
-                    { author: '@user_123', date: '2 jam lalu', text: 'Suka banget dengan update terbarunya, UI makin fresh!', type: 'pos' },
-                    { author: '@gamer_boy', date: '5 jam lalu', text: 'Kenapa kadang masih suka force close sendir ya?', type: 'neg' },
-                    { author: '@tech_guru', date: '1 hari lalu', text: 'Cukup oke, tapi masih bisa dioptimalkan lagi performanya.', type: 'neu' }
-                ]
-            },
-            playstore: {
-                total: 45892,
-                percentages: [65, 20, 15],
-                trendData: {
-                    labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
-                    datasets: [
-                        { label: 'Positif', data: [1200, 1350, 1400, 1500, 1600, 1800, 1900] },
-                        { label: 'Netral', data: [400, 420, 450, 410, 430, 480, 500] },
-                        { label: 'Negatif', data: [350, 300, 280, 320, 300, 250, 210] }
-                    ]
-                },
-                keywords: [
-                    { word: 'mantap', count: 3500 },
-                    { word: 'membantu', count: 2800 },
-                    { word: 'mudah', count: 2100 },
-                    { word: 'berat', count: 1200 },
-                    { word: 'bayar', count: 950 },
-                    { word: 'lancar', count: 890 },
-                    { word: 'iklan', count: 810 },
-                    { word: 'login', count: 650 }
-                ],
-                reviews: [
-                    { author: 'Budi Santoso', date: '1 jam lalu', text: 'Aplikasi yang sangat membantu untuk pekerjaan sehari-hari.', type: 'pos' },
-                    { author: 'Siti Aminah', date: '3 jam lalu', text: 'Tolong kurangin iklannya dong, lumayan ganggu nih.', type: 'neg' },
-                    { author: 'Ahmad M.', date: 'Kemarin', text: 'Sejauh ini lancar jaya, desainnya juga intuitif.', type: 'pos' },
-                    { author: 'Reza R.', date: 'Kemarin', text: 'Habis update malah jadi berat banget loadingnya.', type: 'neg' }
-                ]
-            },
-            instagram: {
-                total: 28410,
-                percentages: [55, 35, 10],
-                trendData: {
-                    labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
-                    datasets: [
-                        { label: 'Positif', data: [800, 850, 920, 1050, 1200, 1500, 1600] },
-                        { label: 'Netral', data: [550, 580, 560, 600, 620, 680, 700] },
-                        { label: 'Negatif', data: [150, 140, 160, 130, 140, 120, 100] }
-                    ]
-                },
-                keywords: [
-                    { word: 'aesthetic', count: 2100 },
-                    { word: 'filter', count: 1850 },
-                    { word: 'cantik', count: 1600 },
-                    { word: 'lucu', count: 1420 },
-                    { word: 'story', count: 1100 },
-                    { word: 'ngebug', count: 450 },
-                    { word: 'love', count: 2300 },
-                    { word: 'viral', count: 1800 }
-                ],
-                reviews: [
-                    { author: 'ig_influencer', date: '30 mnt lalu', text: 'Filternya gemes banget! ❤️💯', type: 'pos' },
-                    { author: 'creative_soul', date: '4 jam lalu', text: 'Kenapa ya story IG aku jadi pecah kualitasnya?', type: 'neg' },
-                    { author: 'foodie_jkt', date: '2 hari lalu', text: 'Biasa aja sih, tapi butuh buat update promo 😂', type: 'neu' }
-                ]
-            }
+            empty: { total: 0, percentages: [0, 0, 0], trendData: null, keywords: [], reviews: [] }
         };
 
         // CHART COLORS
@@ -1525,13 +1542,18 @@
         let colorNeu = '#fbbf24';
         let colorNeg = '#f87171';
         let textColor = '#f8fafc';
-        let gridColor = 'rgba(255, 255, 255, 0.1)';
 
         Chart.defaults.color = textColor;
         Chart.defaults.font.family = 'Figtree, sans-serif';
 
         let trendChart;
         let distChart;
+        let currentAnalysisData = null;
+
+        // Settings (Persistent)
+        let scrapingLimit = localStorage.getItem('scrapeLimit') || 100;
+        let displayLimit = localStorage.getItem('displayLimit') || 10;
+        let sortBy = localStorage.getItem('sortBy') || 'newest';
 
         function animateValue(obj, start, end, duration) {
             let startTimestamp = null;
@@ -1540,22 +1562,10 @@
                 const progress = Math.min((timestamp - startTimestamp) / duration, 1);
                 const easeProgress = 1 - Math.pow(1 - progress, 3);
                 let current = Math.floor(easeProgress * (end - start) + start);
-
-                if (obj.id === 'kpi-total-val') {
-                    obj.innerHTML = current.toLocaleString('id-ID');
-                } else {
-                    obj.innerHTML = current + '%';
-                }
-
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                } else {
-                    if (obj.id === 'kpi-total-val') {
-                        obj.innerHTML = end.toLocaleString('id-ID');
-                    } else {
-                        obj.innerHTML = end + '%';
-                    }
-                }
+                if (obj.id === 'kpi-total-val') obj.innerHTML = current.toLocaleString('id-ID');
+                else obj.innerHTML = current + '%';
+                if (progress < 1) window.requestAnimationFrame(step);
+                else obj.innerHTML = (obj.id === 'kpi-total-val') ? end.toLocaleString('id-ID') : end + '%';
             };
             window.requestAnimationFrame(step);
         }
@@ -1567,17 +1577,11 @@
 
             trendChart = new Chart(ctxTrend, {
                 type: 'line',
-                data: {
-                    labels: [],
-                    datasets: []
-                },
+                data: { labels: [], datasets: [] },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
+                    interaction: { mode: 'index', intersect: false },
                     plugins: {
                         legend: { position: 'bottom' },
                         tooltip: {
@@ -1591,58 +1595,38 @@
                     scales: {
                         x: { grid: { color: gColor } },
                         y: { grid: { color: gColor } }
-                    },
-                    elements: {
-                        line: { tension: 0.4, borderWidth: 3 },
-                        point: { radius: 0, hitRadius: 10, hoverRadius: 6 }
                     }
                 }
             });
-
             const ctxDist = document.getElementById('distChart').getContext('2d');
             distChart = new Chart(ctxDist, {
                 type: 'doughnut',
                 data: {
                     labels: ['Positif', 'Netral', 'Negatif'],
-                    datasets: [{
-                        data: [0, 0, 0],
-                        backgroundColor: [colorPos, colorNeu, colorNeg],
-                        borderWidth: 0,
-                        hoverOffset: 10
-                    }]
+                    datasets: [{ data: [0, 0, 0], backgroundColor: [colorPos, colorNeu, colorNeg], borderWidth: 0, hoverOffset: 10 }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     cutout: '70%',
-                    plugins: {
-                        legend: { position: 'bottom' },
-                        tooltip: {
-                            callbacks: {
-                                label: function (context) {
-                                    return ' ' + context.label + ': ' + context.parsed + '%';
-                                }
-                            }
-                        }
-                    }
+                    plugins: { legend: { position: 'bottom' } }
                 }
             });
         }
 
         function getReviewTypeInfo(type) {
             switch (type) {
-                case 'pos': return { label: 'Positif', icon: 'fa-face-smile', badge: 'badge-pos' };
-                case 'neu': return { label: 'Netral', icon: 'fa-face-meh', badge: 'badge-neu', };
-                case 'neg': return { label: 'Negatif', icon: 'fa-face-frown', badge: 'badge-neg' };
+                case 'pos': return { label: 'Positif', icon: 'fa-face-smile', badge: 'badge-pos', color: '#34d399' };
+                case 'neu': return { label: 'Netral', icon: 'fa-face-meh', badge: 'badge-neu', color: '#fbbf24' };
+                case 'neg': return { label: 'Negatif', icon: 'fa-face-frown', badge: 'badge-neg', color: '#f87171' };
+                default: return { label: 'Netral', icon: 'fa-face-meh', badge: 'badge-neu', color: '#94a3b8' };
             }
         }
-        // Helper to format long text with "Lihat Selengkapnya"
+
         function formatReviewText(text) {
             const limit = 120;
             if (text.length <= limit) return text;
-
             const shortText = text.substring(0, limit) + '...';
-            // We use inline onclick to toggle between short and full text
             return `
                 <span class="short-text">${shortText}</span>
                 <span class="full-text" style="display: none;">${text}</span>
@@ -1663,701 +1647,345 @@
             `;
         }
 
-        // --- FETCH OR SIMULATE ---
-        function loadDashboardData(appKey) {
-            const data = mockData[appKey];
+        function loadDashboardData(data) {
+            if (!data) return;
+            currentAnalysisData = data;
 
-            // 1. Update KPIs
-            const elTotal = document.getElementById('kpi-total-val');
-            const elPos = document.getElementById('kpi-pos-val');
-            const elNeu = document.getElementById('kpi-neu-val');
-            const elNeg = document.getElementById('kpi-neg-val');
+            // 1. KPIs
+            animateValue(document.getElementById('kpi-total-val'), 0, data.total, 800);
+            animateValue(document.getElementById('kpi-pos-val'), 0, data.percentages[0], 800);
+            animateValue(document.getElementById('kpi-neu-val'), 0, data.percentages[1], 800);
+            animateValue(document.getElementById('kpi-neg-val'), 0, data.percentages[2], 800);
 
-            const curTotal = parseInt(elTotal.innerText.replace(/\./g, '')) || 0;
-            const curPos = parseInt(elPos.innerText) || 0;
-            const curNeu = parseInt(elNeu.innerText) || 0;
-            const curNeg = parseInt(elNeg.innerText) || 0;
-
-            animateValue(elTotal, curTotal, data.total, 1000);
-            animateValue(elPos, curPos, data.percentages[0], 1000);
-            animateValue(elNeu, curNeu, data.percentages[1], 1000);
-            animateValue(elNeg, curNeg, data.percentages[2], 1000);
-
-            // 2. Update Trend Chart
-            trendChart.data.labels = data.trendData.labels;
-
+            // 2. Charts Theme Adaptation
             const isLight = document.documentElement.classList.contains('light-mode');
             const themePos = isLight ? '#10b981' : '#34d399';
             const themeNeu = isLight ? '#f59e0b' : '#fbbf24';
             const themeNeg = isLight ? '#ef4444' : '#f87171';
 
-            trendChart.data.datasets = [
-                {
-                    label: 'Positif',
-                    data: data.trendData.datasets[0].data,
-                    borderColor: themePos,
-                    backgroundColor: themePos + '22',
-                    fill: 'start'
-                },
-                {
-                    label: 'Netral',
-                    data: data.trendData.datasets[1].data,
-                    borderColor: themeNeu,
-                    backgroundColor: themeNeu + '22',
-                    fill: 'start'
-                },
-                {
-                    label: 'Negatif',
-                    data: data.trendData.datasets[2].data,
-                    borderColor: themeNeg,
-                    backgroundColor: themeNeg + '22',
-                    fill: 'start'
-                }
-            ];
-            trendChart.update();
+            if (data.trendData) {
+                trendChart.data.labels = data.trendData.labels;
+                trendChart.data.datasets = [
+                    { label: 'Positif', data: data.trendData.datasets[0].data, borderColor: themePos, backgroundColor: themePos + '22', fill: 'start', tension: 0.4 },
+                    { label: 'Netral', data: data.trendData.datasets[1].data, borderColor: themeNeu, backgroundColor: themeNeu + '22', fill: 'start', tension: 0.4 },
+                    { label: 'Negatif', data: data.trendData.datasets[2].data, borderColor: themeNeg, backgroundColor: themeNeg + '22', fill: 'start', tension: 0.4 }
+                ];
+                trendChart.update();
+            }
 
-            // 3. Update Doughnut Chart
             distChart.data.datasets[0].data = data.percentages;
             distChart.data.datasets[0].backgroundColor = [themePos, themeNeu, themeNeg];
             distChart.update();
 
-            // 4. Update Keywords
+            // 3. Keywords
             const kwContainer = document.getElementById('keywords-container');
             kwContainer.innerHTML = '';
-            if (data.keywords.length === 0) {
-                kwContainer.innerHTML = '<div style="color: var(--text-muted); padding: 10px;">Belum ada data keyword. Masukkan URL untuk menganalisa.</div>';
-            } else {
-                data.keywords.forEach((kw, index) => {
-                    const spTr = setTimeout(() => {
-                        const tag = document.createElement('div');
-                        tag.className = 'keyword-tag';
-                        tag.innerHTML = `<span>${kw.word}</span> <span class="keyword-count">${kw.count}</span>`;
-                        kwContainer.appendChild(tag);
-                    }, index * 40);
-                });
-            }
+            data.keywords.forEach(kw => {
+                const tag = document.createElement('div');
+                tag.className = 'keyword-tag';
+                tag.innerHTML = `<span>${kw.word}</span> <span class="keyword-count">${kw.count}</span>`;
+                kwContainer.appendChild(tag);
+            });
 
-            // 5. Update Reviews
+            // 4. Reviews with Limit and Sorting
             const rvContainer = document.getElementById('reviews-list');
-            const viewMoreBtn = document.getElementById('view-more-reviews-btn');
             rvContainer.innerHTML = '';
+            let sortedReviews = [...data.reviews];
+            if (sortBy === 'rating-high') sortedReviews.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+            else if (sortBy === 'rating-low') sortedReviews.sort((a, b) => (a.rating || 0) - (b.rating || 0));
 
-            if (data.reviews.length === 0) {
-                rvContainer.innerHTML = '<div style="color: var(--text-muted); padding: 10px;">Belum ada ulasan yang dianalisa.</div>';
-                viewMoreBtn.style.display = 'none';
-            } else {
-                // Show only top 3 initially
-                const topReviews = data.reviews.slice(0, 3);
-
-                topReviews.forEach((rv, index) => {
-                    const trInfo = getReviewTypeInfo(rv.type);
-                    let ratingHtml = '';
-                    if (rv.rating) {
-                        const filled = `<i class="fa-solid fa-star"></i>`.repeat(Math.round(rv.rating));
-                        const empty = `<i class="fa-regular fa-star"></i>`.repeat(5 - Math.round(rv.rating));
-                        ratingHtml = `<div style="color: #fbbf24; font-size: 0.85em; display: flex; gap: 2px; margin-top: 8px;">${filled}${empty}</div>`;
-                    }
-
-                    const html = `
-                        <div class="review-item" style="animation: fadeInWord 0.5s ease backwards ${index * 0.15}s;">
-                            <div class="review-avatar"><i class="fa-regular fa-user"></i></div>
-                            <div class="review-content">
-                                <div class="review-header">
-                                    <span class="review-author">${rv.author}</span>
-                                    <span class="review-date">${rv.date}</span>
-                                </div>
-                                <div class="review-text">${formatReviewText(rv.text)} ${ratingHtml}</div>
-                                <span class="review-badge ${trInfo.badge}"><i class="fa-regular ${trInfo.icon}"></i> ${trInfo.label}</span>
-                            </div>
-                        </div>
-                    `;
-                    rvContainer.insertAdjacentHTML('beforeend', html);
-                });
-
-                if (data.reviews.length > 3) {
-                    viewMoreBtn.style.display = 'flex';
-                    document.getElementById('more-reviews-count').textContent = data.reviews.length - 3;
-                } else {
-                    viewMoreBtn.style.display = 'none';
+            sortedReviews.slice(0, displayLimit).forEach((rv, i) => {
+                const info = getReviewTypeInfo(rv.type);
+                let ratingHtml = '';
+                if (rv.rating) {
+                    const stars = '★'.repeat(Math.round(rv.rating)) + '☆'.repeat(5 - Math.round(rv.rating));
+                    ratingHtml = `<div style="color: #fbbf24; font-size: 0.9em; margin-top: 5px;">${stars}</div>`;
                 }
+                rvContainer.insertAdjacentHTML('beforeend', `
+                    <div class="review-item" style="animation: fadeIn 0.4s ease forwards ${i * 0.1}s">
+                        <div class="review-avatar"><i class="fa-regular fa-user"></i></div>
+                        <div class="review-content">
+                            <div class="review-header"><strong>${rv.author}</strong> <small>${rv.date}</small></div>
+                            <div class="review-text">${formatReviewText(rv.text)} ${ratingHtml}</div>
+                            <span class="review-badge ${info.badge}"><i class="fa-regular ${info.icon}"></i> ${info.label}</span>
+                        </div>
+                    </div>
+                `);
+            });
+
+            const moreCount = data.reviews.length - displayLimit;
+            const viewMoreBtn = document.getElementById('view-more-reviews-btn');
+            if (moreCount > 0) {
+                viewMoreBtn.style.display = 'inline-block';
+                document.getElementById('more-reviews-count').textContent = moreCount;
+            } else {
+                viewMoreBtn.style.display = 'none';
             }
 
-            // 6. EXTRA STATS
-            const statsGrid = document.getElementById('stats-grid');
-            const insightBox = document.getElementById('insight-box');
-            const ratingCard = document.getElementById('rating-dist-card');
-
-            if (data.extra_stats && data.total > 0) {
+            // 5. Extra Stats & Insights
+            if (data.extra_stats) {
                 const s = data.extra_stats;
-                statsGrid.style.display = 'grid';
-
                 document.getElementById('stat-avg-len').textContent = s.avg_length;
-
-                const sentimentMap = {
-                    pos: { label: 'Positif <i class="fa-regular fa-face-smile"></i>', color: '#34d399' },
-                    neu: { label: 'Netral <i class="fa-regular fa-face-meh"></i>', color: '#fbbf24' },
-                    neg: { label: 'Negatif <i class="fa-regular fa-face-frown"></i>', color: '#f87171' }
-                };
-                const dom = sentimentMap[s.dominant_sentiment] || sentimentMap.neu;
-                document.getElementById('stat-dominant').innerHTML = `<span style="color:${dom.color}; display: flex; align-items: center; justify-content: center; gap: 8px;">${dom.label}</span>`;
-                document.getElementById('stat-dominant-desc').textContent = `${s.dominant_pct}% dari seluruh ulasan`;
-
                 document.getElementById('stat-unique-authors').textContent = s.unique_authors;
                 document.getElementById('stat-total-words').textContent = s.total_words.toLocaleString('id-ID');
-                document.getElementById('stat-longest').textContent = s.longest_words + ' kata';
-                document.getElementById('stat-longest-desc').textContent = s.longest_review;
                 document.getElementById('stat-top-kw').textContent = `"${s.top_keyword}"`;
-                document.getElementById('stat-top-kw-desc').textContent = `Muncul ${s.top_keyword_count}x di semua ulasan`;
 
-                // INSIGHT AI
-                insightBox.style.display = 'flex';
-                const domLabel2 = s.dominant_sentiment === 'pos' ? 'positif' : s.dominant_sentiment === 'neg' ? 'negatif' : 'netral';
+                const dom = getReviewTypeInfo(s.dominant_sentiment);
+                document.getElementById('stat-dominant').innerHTML = `<span style="color:${dom.color}">${dom.label}</span>`;
+                document.getElementById('stat-dominant-desc').textContent = `${s.dominant_pct}% ulasan ${dom.label.toLowerCase()}`;
+
+                document.getElementById('stat-longest').textContent = s.max_length;
+
+                document.getElementById('stats-grid').style.display = 'grid';
+                document.getElementById('insight-box').style.display = 'flex';
                 document.getElementById('insight-text').innerHTML = `
-                    Dari <strong>${data.reviews.length} ulasan</strong> yang dianalisis, <strong>${s.dominant_pct}%</strong> bersifat <strong>${domLabel2}</strong>. 
-                    Kata paling sering muncul adalah "<strong>${s.top_keyword}</strong>" (${s.top_keyword_count}x). 
-                    Rata-rata panjang ulasan adalah <strong>${s.avg_length} kata</strong>, dengan total <strong>${s.total_words.toLocaleString('id-ID')} kata</strong> dari <strong>${s.unique_authors} penulis unik</strong>.
-                    ${s.dominant_sentiment === 'pos' ? ' Secara keseluruhan, respons masyarakat terhadap produk ini cenderung <strong>sangat positif</strong>. <i class="fa-solid fa-circle-check" style="color:#34d399"></i>' : ''}
-                    ${s.dominant_sentiment === 'neg' ? ' Secara keseluruhan, produk ini mendapat <strong>banyak kritik negatif</strong> dari pengguna. <i class="fa-solid fa-circle-exclamation" style="color:#f87171"></i>' : ''}
-                    ${s.dominant_sentiment === 'neu' ? ' Respons pengguna terhadap produk ini bersifat <strong>campuran/netral</strong>. <i class="fa-solid fa-circle-info" style="color:#94a3b8"></i>' : ''}
+                    Analisis terhadap <strong>${data.reviews.length} ulasan</strong> menunjukkan sentimen dominan adalah <strong>${dom.label} (${s.dominant_pct}%)</strong>. 
+                    Topik yang paling sering dibahas berkaitan dengan "<strong>${s.top_keyword}</strong>".
                 `;
 
-                // RATING DISTRIBUTION
+                // Rating Distribution
+                const ratingCard = document.getElementById('rating-dist-card');
                 if (s.rating_distribution) {
                     ratingCard.style.display = 'block';
                     const ratingBars = document.getElementById('rating-bars');
                     ratingBars.innerHTML = '';
                     const rd = s.rating_distribution;
-                    const maxCount = Math.max(rd['1'], rd['2'], rd['3'], rd['4'], rd['5'], 1);
-                    const barColors = { 5: '#34d399', 4: '#6ee7b7', 3: '#fbbf24', 2: '#fb923c', 1: '#f87171' };
-
-                    for (let star = 5; star >= 1; star--) {
-                        const count = rd[String(star)] || 0;
-                        const pct = (count / maxCount) * 100;
-                        const starIcons = `<i class="fa-solid fa-star" style="font-size:0.75rem"></i>`.repeat(star);
+                    const maxVal = Math.max(...Object.values(rd), 1);
+                    const colors = { 5: '#34d399', 4: '#6ee7b7', 3: '#fbbf24', 2: '#fb923c', 1: '#f87171' };
+                    for (let i = 5; i >= 1; i--) {
+                        const count = rd[i] || 0;
+                        const pct = (count / maxVal) * 100;
                         ratingBars.innerHTML += `
                             <div class="rating-bar-container">
-                                <span class="rating-bar-label" style="display:flex; gap:1px; color:#fbbf24; align-items:center;">${starIcons}</span>
-                                <div class="rating-bar-track">
-                                    <div class="rating-bar-fill" style="width: 0%; background: ${barColors[star]};" data-width="${pct}%"></div>
-                                </div>
+                                <span class="rating-bar-label">${i} <i class="fa-solid fa-star"></i></span>
+                                <div class="rating-bar-track"><div class="rating-bar-fill" style="width: ${pct}%; background: ${colors[i]}"></div></div>
                                 <span class="rating-bar-count">${count}</span>
                             </div>
                         `;
                     }
-
-                    // Animate bars
-                    setTimeout(() => {
-                        ratingBars.querySelectorAll('.rating-bar-fill').forEach(bar => {
-                            bar.style.width = bar.getAttribute('data-width');
-                        });
-                    }, 100);
                 } else {
                     ratingCard.style.display = 'none';
                 }
-            } else {
-                statsGrid.style.display = 'none';
-                insightBox.style.display = 'none';
-                ratingCard.style.display = 'none';
             }
         }
 
-        // EVENT LISTENERS
         document.addEventListener('DOMContentLoaded', () => {
             initCharts();
-            loadDashboardData('empty'); // Start empty!
 
-            // Theme toggle logic (basic mock for dark/light)
-            const themeBtn = document.getElementById('theme-toggle');
-            const darkIcon = document.getElementById('dark-icon');
-            const lightIcon = document.getElementById('light-icon');
+            const simModal = document.getElementById('simulation-modal');
+            const reviewsModal = document.getElementById('reviews-modal');
+            const settingsModal = document.getElementById('settings-modal');
+            const cloudModal = document.getElementById('wordcloud-modal');
 
-            themeBtn.addEventListener('click', () => {
-                document.documentElement.classList.toggle('light-mode');
+            // --- Settings ---
+            document.getElementById('set-scrape-limit').value = scrapingLimit;
+            document.getElementById('set-display-limit').value = displayLimit;
+            document.getElementById('set-sort-by').value = sortBy;
 
-                const isLight = document.documentElement.classList.contains('light-mode');
-                const newTextColor = isLight ? '#1e293b' : '#f8fafc';
-                const newGridColor = isLight ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+            document.getElementById('settings-toggle').addEventListener('click', () => settingsModal.classList.add('active'));
+            document.getElementById('settings-dot-close').addEventListener('click', () => settingsModal.classList.remove('active'));
 
-                Chart.defaults.color = newTextColor;
-
-                trendChart.options.scales.x.grid.color = newGridColor;
-                trendChart.options.scales.y.grid.color = newGridColor;
-                trendChart.options.plugins.tooltip.backgroundColor = isLight ? 'rgba(255, 255, 255, 0.9)' : 'rgba(15, 23, 42, 0.9)';
-                trendChart.options.plugins.tooltip.titleColor = isLight ? '#1e293b' : '#f8fafc';
-                trendChart.options.plugins.tooltip.bodyColor = isLight ? '#1e293b' : '#f8fafc';
-
-                // reload data to update chart colors accurately
-                // handled safely by keeping track of last loaded platform internally, but for now we just 
-                // re-draw empty if activeApp isn't cleanly detectable anymore without buttons.
-
-                if (isLight) {
-                    darkIcon.style.display = 'none';
-                    lightIcon.style.display = 'inline-block';
-                } else {
-                    lightIcon.style.display = 'none';
-                    darkIcon.style.display = 'inline-block';
-                }
+            document.getElementById('save-settings-btn').addEventListener('click', () => {
+                scrapingLimit = document.getElementById('set-scrape-limit').value;
+                displayLimit = document.getElementById('set-display-limit').value;
+                sortBy = document.getElementById('set-sort-by').value;
+                localStorage.setItem('scrapeLimit', scrapingLimit);
+                localStorage.setItem('displayLimit', displayLimit);
+                localStorage.setItem('sortBy', sortBy);
+                settingsModal.classList.remove('active');
+                if (currentAnalysisData) loadDashboardData(currentAnalysisData);
             });
 
-            // SECURE SCRAPING SIMULATION LOGIC
-            const analyzeBtn = document.getElementById('start-analysis-btn');
-            const urlInput = document.getElementById('post-url');
-            const simModal = document.getElementById('simulation-modal');
-            const termOutput = document.getElementById('terminal-output');
+            // --- Theme Toggle ---
+            document.getElementById('theme-toggle').addEventListener('click', () => {
+                document.documentElement.classList.toggle('light-mode');
+                const isLight = document.documentElement.classList.contains('light-mode');
+                const newTextColor = isLight ? '#1e293b' : '#f8fafc';
+                const newGridColor = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
 
-            const simulationSteps = [
-                { text: "> Menginisialisasi modul koneksi terenkripsi...", type: "system", delay: 800 },
-                { text: "> Melakukan validasi struktur URL target...", type: "info", delay: 1000 },
-                { text: "[SUCCESS] URL terverifikasi. Platform teridentifikasi.", type: "success", delay: 1200 },
-                { text: "> Mengoptimalkan routing request untuk stabilitas...", type: "info", delay: 1500 },
-                { text: "[NETWORK] Koneksi secure-tunnel berhasil dibangun.", type: "system", delay: 1800 },
-                { text: "> Mengonfigurasi request headers & session token...", type: "info", delay: 2500 },
-                { text: "[NOTICE] Penyesuaian throughput untuk proteksi server...", type: "warn", delay: 3500 },
-                { text: "> Mengambil paket data ulasan (Sequence 1)...", type: "info", delay: 4200 },
-                { text: "> Mengambil paket data ulasan (Sequence 2)...", type: "info", delay: 4800 },
-                { text: "> Mengambil paket data ulasan (Sequence 3)...", type: "info", delay: 5400 },
-                { text: "[OK] Berhasil mengumpulkan seluruh dataset publik.", type: "success", delay: 6000 },
-                { text: "> Menjalankan analisis semantik & NLP Pipeline...", type: "system", delay: 7500 },
-                { text: "> Normalisasi teks & eliminasi noise data...", type: "info", delay: 8200 },
-                { text: "[COMPLETE] Analisis parameter sentimen selesai.", type: "success", delay: 9000 },
-                { text: "> Menghasilkan representasi visual dataset...", type: "system", delay: 9500 },
-                { text: "_SYSTEM_READY", type: "success", delay: 10500 }
-            ];
+                Chart.defaults.color = newTextColor;
+                [trendChart, distChart].forEach(chart => {
+                    chart.options.plugins.legend.labels.color = newTextColor;
+                    if (chart.options.scales) {
+                        chart.options.scales.x.grid.color = newGridColor;
+                        chart.options.scales.y.grid.color = newGridColor;
+                        chart.options.scales.x.ticks.color = newTextColor;
+                        chart.options.scales.y.ticks.color = newTextColor;
+                    }
+                    chart.options.plugins.tooltip.backgroundColor = isLight ? 'rgba(255,255,255,0.9)' : 'rgba(15,23,42,0.9)';
+                    chart.options.plugins.tooltip.titleColor = isLight ? '#1e293b' : '#f8fafc';
+                    chart.options.plugins.tooltip.bodyColor = isLight ? '#1e293b' : '#f8fafc';
+                    chart.update();
+                });
 
-            analyzeBtn.addEventListener('click', async () => {
-                const originalUrl = urlInput.value.trim();
-                const url = originalUrl; // Keep original case for backend
-                const lowerUrl = url.toLowerCase(); // Only for platform checks
-                if (!url) {
-                    urlInput.focus();
-                    return;
-                }
+                document.getElementById('dark-icon').style.display = isLight ? 'none' : 'inline-block';
+                document.getElementById('light-icon').style.display = isLight ? 'inline-block' : 'none';
+                if (currentAnalysisData) loadDashboardData(currentAnalysisData);
+            });
 
-                // FRONTEND INSTANT BLOCK FOR TWITTER & INSTAGRAM
+            // --- Analysis Actions ---
+            document.getElementById('start-analysis-btn').addEventListener('click', async () => {
+                const url = document.getElementById('post-url').value.trim();
+                if (!url) return;
+
+                const lowerUrl = url.toLowerCase();
                 if (lowerUrl.includes('instagram.com') || lowerUrl.includes('twitter.com') || lowerUrl.includes('x.com')) {
                     document.getElementById('error-modal').classList.add('active');
                     return;
                 }
 
-                // Show modal
                 simModal.classList.add('active');
-                termOutput.innerHTML = '';
-
-                let cursor = document.createElement('span');
-                cursor.className = 'cursor-blink';
-                termOutput.appendChild(cursor);
-
-                // Simulation UI sequence
-                const runSimulationLines = async (lines) => {
-                    for (let step of lines) {
-                        await new Promise(r => setTimeout(r, step.delay));
-                        const line = document.createElement('div');
-                        line.className = `log-line ${step.type}`;
-                        line.textContent = step.text;
-                        termOutput.insertBefore(line, cursor);
-                        termOutput.scrollTop = termOutput.scrollHeight;
-                    }
-                };
-
-                const initialSteps = [
-                    { text: "> Initializing secure connection module...", type: "system", delay: 500 },
-                    { text: `> Menganalisis URL Target: ${url.substring(0, 30)}...`, type: "info", delay: 800 },
-                    { text: `> Menghubungkan ke Backend Engine (${API_BASE_URL})...`, type: "system", delay: 1000 },
-                ];
-
-                await runSimulationLines(initialSteps);
+                const termOutput = document.getElementById('terminal-output');
+                termOutput.innerHTML = '<div class="log-line system">> Initializing secure extraction pipeline...</div>';
 
                 try {
-                    // REAL BACKEND CALL
-                    const response = await fetch(`${API_BASE_URL}/api/analyze`, {
+                    const resp = await fetch(`${API_BASE_URL}/api/analyze`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ url: url })
+                        body: JSON.stringify({ url: url, count: parseInt(scrapingLimit) })
                     });
+                    const data = await resp.json();
+                    if (data.error) throw new Error(data.error);
 
-                    const data = await response.json();
-
-                    if (!response.ok) {
-                        throw new Error(data.error || 'Gagal mengekstrak data dari URL tersebut.');
-                    }
-
-                    let finalSteps = [
-                        { text: "[NETWORK] Sinkronisasi endpoint berhasil.", type: "success", delay: 500 },
-                        { text: "> Mengenkripsi metadata & parameter request...", type: "info", delay: 600 },
-                        { text: "> Melakukan parsing data stream...", type: "info", delay: 800 },
-                        { text: `[DATA] Ekstraksi ${data.total} entri data berhasil.`, type: "success", delay: 400 },
-                        { text: "> Memproses algoritma klasifikasi sentimen...", type: "system", delay: 1200 },
-                        { text: "> Menghitung densitas kata kunci & parameter NLP...", type: "system", delay: 1000 },
-                        { text: "[SUCCESS] Payload data siap ditampilkan.", type: "success", delay: 500 },
-                        { text: "_SYSTEM_READY", type: "success", delay: 500 }
-                    ];
-
-                    await runSimulationLines(finalSteps);
+                    termOutput.innerHTML += `<div class="log-line success">> Extraction successful: ${data.reviews.length} records retrieved.</div>`;
+                    termOutput.innerHTML += '<div class="log-line info">> Mapping sentiment landscape...</div>';
 
                     setTimeout(() => {
                         document.body.classList.remove('hero-mode');
+                        document.getElementById('dashboard-wrapper')?.classList.add('active'); // legacy wrapper check
                         simModal.classList.remove('active');
+                        loadDashboardData(data);
 
-                        // Determine platform from URL
-                        let detectedPlatform = 'other';
-                        let platName = 'Website / Other';
-                        let pIcon = 'fa-globe';
+                        let plat = 'Global Source';
+                        let icon = 'fa-globe';
+                        if (url.includes('play.google')) { plat = 'Google Play Store'; icon = 'fa-google-play'; }
+                        else if (url.includes('youtube')) { plat = 'YouTube'; icon = 'fa-youtube'; }
+                        else if (url.includes('reddit')) { plat = 'Reddit'; icon = 'fa-reddit-alien'; }
 
-                        const lowerUrl = url.toLowerCase();
-                        if (lowerUrl.includes('play.google.com')) {
-                            detectedPlatform = 'playstore';
-                            platName = 'Google Play Store';
-                            pIcon = 'fa-google-play';
-                        } else if (lowerUrl.includes('twitter.com') || lowerUrl.includes('x.com')) {
-                            detectedPlatform = 'twitter';
-                            platName = 'Twitter (X)';
-                            pIcon = 'fa-twitter';
-                        } else if (lowerUrl.includes('instagram.com')) {
-                            detectedPlatform = 'instagram';
-                            platName = 'Instagram';
-                            pIcon = 'fa-instagram';
-                        } else if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
-                            detectedPlatform = 'youtube';
-                            platName = 'YouTube';
-                            pIcon = 'fa-youtube';
-                        } else if (lowerUrl.includes('reddit.com')) {
-                            detectedPlatform = 'reddit';
-                            platName = 'Reddit';
-                            pIcon = 'fa-reddit-alien';
-                        }
+                        const platIndicator = document.getElementById('detected-platform');
+                        platIndicator.style.opacity = '1';
+                        platIndicator.innerHTML = `<i class="fa-brands ${icon}"></i> Analisa Data dari: ${plat}`;
 
-                        // Show indicator
-                        const indBtn = document.getElementById('detected-platform');
-                        if (data.is_mock) {
-                            indBtn.innerHTML = `Berdasarkan Data Dari: <i class="fa-brands ${pIcon}"></i> <strong>${platName}</strong> <br><span style="color: #ef4444; font-size: 0.85em; margin-top:5px; display:inline-block;"><i class="fa-solid fa-triangle-exclamation"></i> (Platform memblokir ekstraksi asli. Menggunakan Model Data Simulasi untuk Demo)</span>`;
-                        } else {
-                            indBtn.innerHTML = `Menampilkan Hasil Ekstraksi Asli: <i class="fa-brands ${pIcon}"></i> <strong>${platName}</strong>`;
-                        }
-                        indBtn.style.opacity = '1';
-
-                        // Show reset button
-                        document.getElementById('reset-analysis-btn').style.display = 'flex';
                         document.getElementById('start-analysis-btn').style.display = 'none';
-
-                        // Update the dashboard with REAL data
-                        mockData[detectedPlatform] = data;
-                        loadDashboardData(detectedPlatform);
-
-                        urlInput.value = '';
+                        document.getElementById('reset-analysis-btn').style.display = 'inline-block';
                     }, 1000);
 
-                } catch (error) {
-                    const errorSteps = [
-                        { text: `[ERROR] ${error.message}`, type: "r", delay: 400 },
-                        { text: "> Membatalkan ekstraksi demi keamanan...", type: "system", delay: 600 },
-                        { text: "_FAILED", type: "r", delay: 800 }
-                    ];
-                    await runSimulationLines(errorSteps);
-
-                    setTimeout(() => {
-                        simModal.classList.remove('active');
-                    }, 2500);
+                } catch (e) {
+                    termOutput.innerHTML += `<div class="log-line" style="color:#f87171">> Failure: ${e.message}</div>`;
                 }
             });
 
-            // Close sim modal if clicked outside terminal
-            simModal.addEventListener('click', (e) => {
-                if (e.target === simModal) {
-                    simModal.classList.remove('active');
-                }
-            });
-
-            // RESET BUTTON LOGIC
-            const resetBtn = document.getElementById('reset-analysis-btn');
-            resetBtn.addEventListener('click', () => {
-                urlInput.value = '';
+            document.getElementById('reset-analysis-btn').addEventListener('click', () => {
+                document.body.classList.add('hero-mode');
+                document.getElementById('post-url').value = '';
                 document.getElementById('detected-platform').style.opacity = '0';
-                resetBtn.style.display = 'none';
-                document.getElementById('start-analysis-btn').style.display = 'flex';
-                loadDashboardData('empty'); // Clean state
+                document.getElementById('start-analysis-btn').style.display = 'inline-block';
+                document.getElementById('reset-analysis-btn').style.display = 'none';
             });
 
-            // REVIEWS MODAL LOGIC
-            const reviewsModal = document.getElementById('reviews-modal');
-            const viewMoreBtn = document.getElementById('view-more-reviews-btn');
-            const closeReviewsBtn = document.getElementById('close-reviews-modal');
-            const allReviewsContainer = document.getElementById('all-reviews-list');
-
-            viewMoreBtn.addEventListener('click', () => {
-                // Determine active plat
-                let actPlat = 'empty';
-                const lowerStr = document.getElementById('detected-platform').innerHTML.toLowerCase();
-
-                if (lowerStr.includes('twitter') || lowerStr.includes('x.com')) actPlat = 'twitter';
-                else if (lowerStr.includes('instagram')) actPlat = 'instagram';
-                else if (lowerStr.includes('play')) actPlat = 'playstore';
-                else if (lowerStr.includes('youtube')) actPlat = 'youtube';
-                else if (lowerStr.includes('reddit')) actPlat = 'reddit';
-
-                const data = mockData[actPlat];
-                if (!data || !data.reviews) return;
-
-                allReviewsContainer.innerHTML = '';
-                data.reviews.forEach((rv, index) => {
-                    const trInfo = getReviewTypeInfo(rv.type);
-                    let ratingHtml = '';
-                    if (rv.rating) {
-                        const filled = '★'.repeat(Math.round(rv.rating));
-                        const empty = '☆'.repeat(5 - Math.round(rv.rating));
-                        ratingHtml = `<div style="color: #fbbf24; font-size: 0.95em; letter-spacing: 2px; margin-top: 8px;">${filled}${empty}</div>`;
-                    }
-
-                    const html = `
-                        <div class="review-item" style="border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 15px; margin-bottom: 15px;">
-                            <div class="review-avatar"><i class="fa-regular fa-user"></i></div>
-                            <div class="review-content" style="width: 100%;">
-                                <div class="review-header">
-                                    <span class="review-author" style="color: var(--text-color);">${rv.author}</span>
-                                    <span class="review-date">${rv.date}</span>
-                                </div>
-                                <div class="review-text" style="color: var(--text-color);">${formatReviewText(rv.text)} ${ratingHtml}</div>
-                                <span class="review-badge ${trInfo.badge}"><i class="fa-regular ${trInfo.icon}"></i> ${trInfo.label}</span>
-                            </div>
+            // --- View More Reviews ---
+            document.getElementById('view-more-reviews-btn').addEventListener('click', () => {
+                if (!currentAnalysisData) return;
+                const list = document.getElementById('all-reviews-list');
+                list.innerHTML = '';
+                currentAnalysisData.reviews.forEach(rv => {
+                    const info = getReviewTypeInfo(rv.type);
+                    list.insertAdjacentHTML('beforeend', `
+                        <div style="padding: 15px 0; border-bottom: 1px solid rgba(148, 163, 184, 0.1);">
+                            <strong>${rv.author}</strong> <small style="color: var(--text-muted)">(${rv.date})</small><br>
+                            <p style="margin: 5px 0">${rv.text}</p>
+                            <span class="review-badge ${info.badge}">${info.label}</span>
                         </div>
-                    `;
-                    allReviewsContainer.insertAdjacentHTML('beforeend', html);
+                    `);
                 });
-
                 reviewsModal.classList.add('active');
             });
 
-            // REVIEWS MODAL DOT LOGIC
-            const revBox = document.querySelector('#reviews-modal .terminal-box');
-
-            document.getElementById('rev-dot-close').addEventListener('click', () => {
-                reviewsModal.classList.remove('active');
-            });
-            document.getElementById('rev-dot-min').addEventListener('click', () => {
-                revBox.classList.toggle('minimized');
-            });
-            document.getElementById('rev-dot-max').addEventListener('click', () => {
-                if (revBox.classList.contains('fullscreen')) {
-                    revBox.classList.remove('fullscreen');
-                } else {
-                    revBox.classList.remove('minimized');
-                    revBox.classList.add('fullscreen');
-                }
-            });
-
-            // SIMULATION MODAL DOT LOGIC
-            const simBox = document.querySelector('#simulation-modal .terminal-box');
-
-            document.getElementById('sim-dot-close').addEventListener('click', () => {
-                simModal.classList.remove('active');
-            });
-            document.getElementById('sim-dot-min').addEventListener('click', () => {
-                simBox.classList.toggle('minimized');
-            });
-            document.getElementById('sim-dot-max').addEventListener('click', () => {
-                if (simBox.classList.contains('fullscreen')) {
-                    simBox.classList.remove('fullscreen');
-                } else {
-                    simBox.classList.remove('minimized');
-                    simBox.classList.add('fullscreen');
-                }
-            });
-
-            reviewsModal.addEventListener('click', (e) => {
-                if (e.target === reviewsModal) {
-                    reviewsModal.classList.remove('active');
-                }
-            });
-
-            // ERROR MODAL LOGIC
-            const errorModal = document.getElementById('error-modal');
-            document.getElementById('close-error-modal').addEventListener('click', () => {
-                errorModal.classList.remove('active');
-            });
-            document.getElementById('err-dot-close').addEventListener('click', () => {
-                errorModal.classList.remove('active');
-            });
-            document.getElementById('btn-mengerti').addEventListener('click', () => {
-                errorModal.classList.remove('active');
-            });
-            errorModal.addEventListener('click', (e) => {
-                if (e.target === errorModal) errorModal.classList.remove('active');
-            });
-
-            // EXPORT TEXT MINING PNG
-            const exportBtn = document.getElementById('export-png-btn');
-            exportBtn.addEventListener('click', () => {
-                const targetNode = document.getElementById('export-keywords-card');
-
-                // Keep references to original styles
-                const originalBg = targetNode.style.background;
-                const originalBorder = targetNode.style.border;
-
-                // Temporary styles for export to ensure it records cleanly without translucent blending issues
-                const isLight = document.documentElement.classList.contains('light-mode');
-                targetNode.style.background = isLight ? '#ffffff' : '#0f172a';
-                targetNode.style.border = 'none';
-
-                exportBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Wait...';
-
-                html2canvas(targetNode, {
-                    scale: 2, // higher resolution
-                    backgroundColor: isLight ? '#ffffff' : '#0f172a',
-                    logging: false
-                }).then(canvas => {
-                    const link = document.createElement('a');
-                    link.download = `sentiment_keywords_${Date.now()}.png`;
-                    link.href = canvas.toDataURL('image/png');
-                    link.click();
-
-                    // Restore original
-                    targetNode.style.background = originalBg;
-                    targetNode.style.border = originalBorder;
-                    exportBtn.innerHTML = '<i class="fa-solid fa-file-image"></i> PNG';
-                }).catch(err => {
-                    console.error("Export failed", err);
-                    targetNode.style.background = originalBg;
-                    targetNode.style.border = originalBorder;
-                    exportBtn.innerHTML = '<i class="fa-solid fa-file-image"></i> PNG';
-                });
-            });
-
-            // EXPORT CSV
+            // --- Exports ---
             document.getElementById('export-csv-btn').addEventListener('click', () => {
-                // Find current active data
-                let actPlat = 'empty';
-                for (const key of Object.keys(mockData)) {
-                    if (key !== 'empty' && mockData[key].total > 0) actPlat = key;
-                }
-                const data = mockData[actPlat];
-                if (!data || !data.keywords || data.keywords.length === 0) {
-                    alert('Belum ada data keyword untuk diekspor.');
-                    return;
-                }
-
-                let csv = 'No,Kata Kunci,Jumlah Kemunculan\n';
-                data.keywords.forEach((kw, i) => {
-                    csv += `${i + 1},"${kw.word}",${kw.count}\n`;
+                if (!currentAnalysisData) return;
+                let csv = 'Author,Date,Text,Sentiment,Rating\n';
+                currentAnalysisData.reviews.forEach(r => {
+                    csv += `"${r.author}","${r.date}","${r.text.replace(/"/g, '""')}","${r.type}","${r.rating || ''}"\n`;
                 });
-
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `keywords_${Date.now()}.csv`;
-                link.click();
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `sentiment_export_${Date.now()}.csv`;
+                a.click();
             });
 
-            // EXPORT TEXTBLOB TXT
+            document.getElementById('export-png-btn').addEventListener('click', () => {
+                const target = document.getElementById('export-keywords-card');
+                const isLight = document.documentElement.classList.contains('light-mode');
+                html2canvas(target, { backgroundColor: isLight ? '#ffffff' : '#0f172a' }).then(canvas => {
+                    const a = document.createElement('a');
+                    a.href = canvas.toDataURL();
+                    a.download = `keywords_snapshot_${Date.now()}.png`;
+                    a.click();
+                });
+            });
+
             document.getElementById('export-txt-btn').addEventListener('click', () => {
-                let actPlat = 'empty';
-                for (const key of Object.keys(mockData)) {
-                    if (key !== 'empty' && mockData[key].total > 0) actPlat = key;
-                }
-                const data = mockData[actPlat];
-                if (!data || !data.keywords || data.keywords.length === 0) {
-                    alert('Belum ada data keyword untuk diekspor.');
-                    return;
-                }
+                if (!currentAnalysisData) return;
+                let txt = "SENTIMENT ANALYSIS REPORT\n=========================\n\n";
+                txt += `Source: ${document.getElementById('detected-platform').innerText}\n`;
+                txt += `Total Items: ${currentAnalysisData.total}\n\n`;
+                txt += "Top Keywords:\n";
+                currentAnalysisData.keywords.forEach(kw => txt += `- ${kw.word}: ${kw.count}\n`);
+                const blob = new Blob([txt], { type: 'text/plain' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `analysis_report.txt`;
+                a.click();
+            });
 
-                let txt = '===========================================\n';
-                txt += '  TextBlob — Top Keywords Analysis Report\n';
-                txt += '===========================================\n\n';
-                txt += `Tanggal Ekspor : ${new Date().toLocaleDateString('id-ID', { dateStyle: 'full' })}\n`;
-                txt += `Total Ulasan   : ${data.total.toLocaleString('id-ID')}\n`;
-                txt += `Platform       : ${actPlat}\n\n`;
-                txt += '-------------------------------------------\n';
-                txt += '  Peringkat  |  Kata Kunci  |  Frekuensi\n';
-                txt += '-------------------------------------------\n';
-                data.keywords.forEach((kw, i) => {
-                    const rank = String(i + 1).padStart(5, ' ');
-                    const word = kw.word.padEnd(14, ' ');
-                    txt += `  ${rank}       ${word}   ${kw.count}\n`;
-                });
-                txt += '-------------------------------------------\n\n';
+            // --- Word Cloud ---
+            document.getElementById('export-cloud-btn').addEventListener('click', () => {
+                if (!currentAnalysisData || !currentAnalysisData.keywords.length) return;
+                cloudModal.classList.add('active');
+                renderWordCloud(currentAnalysisData.keywords);
+            });
 
-                // Generate TextBlob-style word frequency text
-                txt += '=== TextBlob Word Corpus ===\n';
-                txt += '(Setiap kata diulang sesuai frekuensinya untuk digunakan kembali sebagai input TextBlob)\n\n';
-                data.keywords.forEach(kw => {
-                    const repeated = Array(Math.min(kw.count, 50)).fill(kw.word).join(' ');
-                    txt += `${repeated}\n`;
-                });
-                txt += '\n=== END OF REPORT ===\n';
+            function renderWordCloud(keywords) {
+                const canvas = document.getElementById('cloud-canvas');
+                const loader = document.getElementById('cloud-loading');
+                loader.style.display = 'flex';
 
-                const blob = new Blob([txt], { type: 'text/plain;charset=utf-8;' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `textblob_keywords_${Date.now()}.txt`;
-                link.click();
-                // EXPORT WORD CLOUD LOGIC
-                const cloudModal = document.getElementById('wordcloud-modal');
-                const cloudCanvas = document.getElementById('cloud-canvas');
-                const closeCloudBtn = document.getElementById('close-cloud-modal');
-                const downloadCloudBtn = document.getElementById('download-cloud-btn');
-                const regenerateBtn = document.getElementById('regenerate-cloud-btn');
+                const list = keywords.map(kw => [kw.word, Math.max(12, Math.min(60, kw.count * (40 / keywords[0].count)))]);
 
-                document.getElementById('export-cloud-btn').addEventListener('click', () => {
-                    let actPlat = 'empty';
-                    for (const key of Object.keys(mockData)) {
-                        if (key !== 'empty' && mockData[key].total > 0) actPlat = key;
-                    }
-                    const data = mockData[actPlat];
-                    if (!data || !data.keywords || data.keywords.length === 0) {
-                        alert('Belum ada data keyword untuk divisualisasikan.');
-                        return;
-                    }
-
-                    cloudModal.classList.add('active');
-                    renderWordCloud(data.keywords);
-                });
-
-                function renderWordCloud(keywords) {
-                    // Map keywords to WordCloud2 format: [ [word, weight], ... ]
-                    const list = keywords.map(kw => [kw.word, Math.max(12, Math.min(60, kw.count * (40 / keywords[0].count)))]);
-
-                    WordCloud(cloudCanvas, {
+                setTimeout(() => {
+                    WordCloud(canvas, {
                         list: list,
                         fontFamily: 'Figtree, sans-serif',
-                        color: function () {
-                            const colors = ['#38bdf8', '#818cf8', '#34d399', '#fbbf24', '#f87171', '#a78bfa'];
-                            return colors[Math.floor(Math.random() * colors.length)];
-                        },
-                        rotateRatio: 0.5,
-                        rotationSteps: 2,
+                        color: () => ['#38bdf8', '#818cf8', '#34d399', '#fbbf24', '#f87171'][Math.floor(Math.random() * 5)],
                         backgroundColor: '#0f172a',
+                        rotateRatio: 0.5,
                         gridSize: 8,
-                        weightFactor: 2,
-                        drawOutOfBound: false,
+                        weightFactor: 1.5,
                         shrinkToFit: true
                     });
-                }
+                    loader.style.display = 'none';
+                }, 400);
+            }
 
-                closeCloudBtn.addEventListener('click', () => {
-                    cloudModal.classList.remove('active');
-                });
+            document.getElementById('close-cloud-modal').addEventListener('click', () => cloudModal.classList.remove('active'));
+            document.getElementById('regenerate-cloud-btn').addEventListener('click', () => renderWordCloud(currentAnalysisData.keywords));
+            document.getElementById('download-cloud-btn').addEventListener('click', () => {
+                const a = document.createElement('a');
+                a.href = document.getElementById('cloud-canvas').toDataURL();
+                a.download = 'wordcloud.png';
+                a.click();
+            });
 
-                cloudModal.addEventListener('click', (e) => {
-                    if (e.target === cloudModal) cloudModal.classList.remove('active');
-                });
-
-                regenerateBtn.addEventListener('click', () => {
-                    let actPlat = 'empty';
-                    for (const key of Object.keys(mockData)) {
-                        if (key !== 'empty' && mockData[key].total > 0) actPlat = key;
-                    }
-                    renderWordCloud(mockData[actPlat].keywords);
-                });
-
-                // DOWNLOAD WORD CLOUD
-                document.getElementById('download-cloud-btn').addEventListener('click', () => {
-                    const canvas = document.getElementById('cloud-canvas');
-                    const link = document.createElement('a');
-                    link.download = `sentiment_wordcloud_${Date.now()}.png`;
-                    link.href = canvas.toDataURL('image/png');
-                    link.click();
-                });
+            // --- Modal Helpers ---
+            [document.getElementById('sim-dot-close'), document.getElementById('rev-dot-close'), document.getElementById('err-dot-close'), document.getElementById('btn-mengerti')].forEach(b => {
+                if (b) b.addEventListener('click', () => b.closest('.modal-overlay').classList.remove('active'));
             });
         });
     </script>
+
 </body>
 
 </html>
