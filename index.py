@@ -83,7 +83,12 @@ def analyze_sentiment_and_keywords(tweets_or_reviews):
             'couldn', 'wouldn', 'shouldn', 'much', 'many', 'well', 'way', 'make', 'made',
             'thing', 'things', 'know', 'think', 'want', 'come', 'take', 'use', 'used',
         ]
-        filtered_words = [w for w in words if w not in stopwords and len(w) > 2]
+        # Pre-process for faster lookup
+        indo_pos_set = set(indo_pos)
+        indo_neg_set = set(indo_neg)
+        stop_set = set(stopwords)
+
+        filtered_words = [w for w in words if w not in stop_set and len(w) > 2]
         all_words.extend(filtered_words)
 
         rating = item.get('rating')
@@ -101,22 +106,29 @@ def analyze_sentiment_and_keywords(tweets_or_reviews):
             # Sentiment scoring
             score = 0
             for w in filtered_words:
-                if w in indo_pos: score += 1
-                elif w in indo_neg: score -= 1
+                if w in indo_pos_set: score += 1
+                elif w in indo_neg_set: score -= 1
             
-            # fallback to textblob
-            tb = TextBlob(text)
-            tb_pol = tb.sentiment.polarity
-            
-            if score > 0 or tb_pol > 0.05:
+            if score > 0:
                 sentiment = 'pos'
                 pos_count += 1
-            elif score < 0 or tb_pol < -0.1:
+            elif score < 0:
                 sentiment = 'neg'
                 neg_count += 1
             else:
-                sentiment = 'neu'
-                neu_count += 1
+                # fallback to textblob only if dictionary search is inconclusive
+                # limit textblob calls for very large datasets if needed, but for 3k it should be okay
+                tb = TextBlob(text)
+                tb_pol = tb.sentiment.polarity
+                if tb_pol > 0.1:
+                    sentiment = 'pos'
+                    pos_count += 1
+                elif tb_pol < -0.1:
+                    sentiment = 'neg'
+                    neg_count += 1
+                else:
+                    sentiment = 'neu'
+                    neu_count += 1
                 
         processed_reviews.append({
             'author': author,
@@ -208,11 +220,37 @@ def get_playstore_data(app_id, count=100):
                 'rating': r.get('score', None)
             })
             
+        # Continuation loop if requested count exceeds what was retrieved
+        while len(formatted_reviews) < count:
+            if not continuation_token:
+                break
+            
+            print(f"Fetching continuation for PlayStore (Current: {len(formatted_reviews)})...")
+            result_cont, continuation_token = reviews(
+                app_id, 
+                continuation_token=continuation_token
+            )
+            
+            if not result_cont:
+                break
+                
+            for r in result_cont:
+                if len(formatted_reviews) >= count:
+                    break
+                date_obj = r['at']
+                date_str = date_obj.strftime("%d %b %Y") if isinstance(date_obj, datetime) else str(date_obj)
+                formatted_reviews.append({
+                    'content': r['content'],
+                    'author': r['userName'],
+                    'date': date_str,
+                    'rating': r.get('score', None)
+                })
+            
         percentages, keywords, recent_reviews, extra_stats = analyze_sentiment_and_keywords(formatted_reviews)
         
         return {
             'is_mock': False,
-            'total': len(result),
+            'total': len(formatted_reviews),
             'percentages': percentages,
             'keywords': keywords,
             'reviews': recent_reviews,
@@ -230,9 +268,8 @@ def get_youtube_data(url, count_req=100):
         generator = downloader.get_comments_from_url(url, sort_by=0)
         
         formatted_reviews = []
-        count = 0
         for comment in generator:
-            if count >= count_req:
+            if len(formatted_reviews) >= count_req:
                 break
             text = comment.get('text', '')
             if text:
@@ -241,7 +278,6 @@ def get_youtube_data(url, count_req=100):
                     'author': comment.get('author', 'Anonymous'),
                     'date': comment.get('time', 'Baru saja')
                 })
-                count += 1
                 
         percentages, keywords, recent_reviews, extra_stats = analyze_sentiment_and_keywords(formatted_reviews)
         
