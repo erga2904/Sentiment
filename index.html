@@ -1891,14 +1891,24 @@
                         loadDashboardData(data);
 
                         let plat = 'Global Source';
-                        let icon = 'fa-solid fa-globe';
-                        if (url.includes('play.google')) { plat = 'Google Play Store'; icon = 'fa-brands fa-google-play'; }
-                        else if (url.includes('youtube')) { plat = 'YouTube'; icon = 'fa-brands fa-youtube'; }
-                        else if (url.includes('reddit')) { plat = 'Reddit'; icon = 'fa-brands fa-reddit-alien'; }
+                        let iconClass = 'fa-solid fa-globe';
+
+                        if (url.includes('play.google.com') || url.includes('google.com/store')) {
+                            plat = 'Google Play Store';
+                            iconClass = 'fa-brands fa-google-play';
+                        }
+                        else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                            plat = 'YouTube';
+                            iconClass = 'fa-brands fa-youtube';
+                        }
+                        else if (url.includes('reddit.com') || url.includes('redd.it')) {
+                            plat = 'Reddit';
+                            iconClass = 'fa-brands fa-reddit-alien';
+                        }
 
                         const platIndicator = document.getElementById('detected-platform');
                         platIndicator.style.opacity = '1';
-                        platIndicator.innerHTML = `<i class="${icon}"></i> Analisa Data dari: ${plat}`;
+                        platIndicator.innerHTML = `<i class="${iconClass}"></i> Analisa Data dari: ${plat}`;
 
                         document.getElementById('start-analysis-btn').style.display = 'none';
                         document.getElementById('reset-analysis-btn').style.display = 'inline-block';
