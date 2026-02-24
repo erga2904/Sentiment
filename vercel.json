@@ -1,0 +1,26 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "server.py",
+            "use": "@vercel/python"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/api/(.*)",
+            "dest": "server.py"
+        },
+        {
+            "src": "/",
+            "status": 301,
+            "headers": {
+                "Location": "/sentiment.html"
+            }
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/$1"
+        }
+    ]
+}
