@@ -212,7 +212,7 @@ def get_playstore_data(app_id, count=100):
         
         return {
             'is_mock': False,
-            'total': len(result) * random.randint(10, 50),
+            'total': len(result),
             'percentages': percentages,
             'keywords': keywords,
             'reviews': recent_reviews,
@@ -247,7 +247,7 @@ def get_youtube_data(url, count_req=100):
         
         return {
             'is_mock': False,
-            'total': len(formatted_reviews) * random.randint(3, 10),
+            'total': len(formatted_reviews),
             'percentages': percentages,
             'keywords': keywords,
             'reviews': recent_reviews,
@@ -289,7 +289,7 @@ def get_reddit_data(url, count_req=100):
         
         return {
             'is_mock': False,
-            'total': len(formatted_reviews) * random.randint(2, 5),
+            'total': len(formatted_reviews),
             'percentages': percentages,
             'keywords': keywords,
             'reviews': recent_reviews,
