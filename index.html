@@ -1858,8 +1858,12 @@
                 }
 
                 simModal.classList.add('active');
-                const termOutput = document.getElementById('terminal-output');
-                termOutput.innerHTML = '<div class="log-line system">> Initializing secure extraction pipeline...</div>';
+                termOutput.innerHTML = '<div class="log-line system">> Menghubungkan ke secure-extraction pipeline...</div>';
+                termOutput.innerHTML += `<div class="log-line">> Target: ${url}</div>`;
+                if (scrapingLimit > 1000) {
+                    termOutput.innerHTML += `<div class="log-line warning">> Info: Deep Scrape Mode Aktif (${scrapingLimit} data).</div>`;
+                    termOutput.innerHTML += `<div class="log-line info">> Proses ribuan data mungkin memakan waktu lebih lama. Mohon tetap di halaman ini...</div>`;
+                }
 
                 try {
                     const resp = await fetch(`${API_BASE_URL}/api/analyze`, {
