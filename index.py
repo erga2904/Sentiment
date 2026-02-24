@@ -182,14 +182,14 @@ def analyze_sentiment_and_keywords(tweets_or_reviews):
 
     return [pos_pct, neu_pct, neg_pct], keywords, recent_reviews, extra_stats
 
-def get_playstore_data(app_id):
+def get_playstore_data(app_id, count=100):
     try:
         result, continuation_token = reviews(
             app_id,
-            lang='id', # defaults to indonesian
+            lang='id', 
             country='id', 
             sort=Sort.NEWEST,
-            count=500
+            count=count
         )
         
         # Format for analysis function
@@ -222,18 +222,17 @@ def get_playstore_data(app_id):
         print(f"Error scraping PlayStore: {e}")
         return None
 
-def get_youtube_data(url):
+def get_youtube_data(url, count_req=100):
     try:
         from youtube_comment_downloader import YoutubeCommentDownloader
         downloader = YoutubeCommentDownloader()
         
-        # We need a clean url, but it usually handles normal urls
         generator = downloader.get_comments_from_url(url, sort_by=0)
         
         formatted_reviews = []
         count = 0
         for comment in generator:
-            if count >= 500:
+            if count >= count_req:
                 break
             text = comment.get('text', '')
             if text:
@@ -258,7 +257,7 @@ def get_youtube_data(url):
         print(f"Error scraping YouTube: {e}")
         return None
 
-def get_reddit_data(url):
+def get_reddit_data(url, count_req=100):
     try:
         clean_url = url.split('?')[0].rstrip('/')
         json_url = clean_url + '.json'
@@ -283,7 +282,7 @@ def get_reddit_data(url):
                         'author': comment.get('author', 'Anonymous'),
                         'date': 'Hari ini'
                     })
-            if len(formatted_reviews) >= 200:
+            if len(formatted_reviews) >= count_req:
                 break
                 
         percentages, keywords, recent_reviews, extra_stats = analyze_sentiment_and_keywords(formatted_reviews)
@@ -324,6 +323,7 @@ def status():
 def analyze():
     data = request.json
     url = data.get('url', '')
+    count = int(data.get('count', 100))
     
     if not url:
         return jsonify({'error': 'URL is required'}), 400
@@ -333,7 +333,7 @@ def analyze():
         app_id = extract_app_id(url)
         if app_id:
             # REAL SCRAPING HAPPENS HERE
-            result = get_playstore_data(app_id)
+            result = get_playstore_data(app_id, count=count)
             if result:
                 # Add fake trend data since play store doesn't give historical daily sentiment easily
                 result['trendData'] = {
@@ -352,7 +352,7 @@ def analyze():
             
     # YOUTUBE
     elif 'youtube.com' in url or 'youtu.be' in url:
-        result = get_youtube_data(url)
+        result = get_youtube_data(url, count_req=count)
         if result:
             result['trendData'] = {
                 'labels': ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
@@ -368,7 +368,7 @@ def analyze():
              
     # REDDIT
     elif 'reddit.com' in url:
-        result = get_reddit_data(url)
+        result = get_reddit_data(url, count_req=count)
         if result:
             result['trendData'] = {
                 'labels': ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
