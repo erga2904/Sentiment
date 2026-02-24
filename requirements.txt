@@ -1,0 +1,6 @@
+flask==3.0.0
+flask-cors==4.0.0
+google-play-scraper==1.2.4
+textblob==0.17.1
+requests==2.31.0
+gunicorn==21.2.0
