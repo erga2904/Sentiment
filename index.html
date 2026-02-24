@@ -1838,22 +1838,22 @@
             const termOutput = document.getElementById('terminal-output');
 
             const simulationSteps = [
-                { text: "> Initializing secure connection module...", type: "system", delay: 800 },
-                { text: "> Memvalidasi URL Target...", type: "info", delay: 1000 },
-                { text: "[OK] URL valid. Target platform terdeteksi.", type: "success", delay: 1200 },
-                { text: "> Menetapkan Proxy rotasi untuk menghindari IP Ban...", type: "info", delay: 1500 },
-                { text: "[PROXY] Terhubung ke anon-proxy-sg-01:8080", type: "system", delay: 1800 },
-                { text: "> Bypass anti-bot headers & cookies...", type: "info", delay: 2500 },
-                { text: "[WARN] Rate limit protection detected! Menerapkan jeda acak...", type: "warn", delay: 3500 },
-                { text: "> Mengekstrak komentar halaman 1...", type: "info", delay: 4200 },
-                { text: "> Mengekstrak komentar halaman 2...", type: "info", delay: 4800 },
-                { text: "> Mengekstrak komentar halaman 3...", type: "info", delay: 5400 },
-                { text: "[OK] Berhasil mengekstrak total 342 komentar.", type: "success", delay: 6000 },
-                { text: "> Memproses NLP (Natural Language Processing) & Sentiment Analysis...", type: "system", delay: 7500 },
-                { text: "> Tokenization & Stopword removal...", type: "info", delay: 8200 },
-                { text: "[OK] Analisis Sentimen Selesai.", type: "success", delay: 9000 },
-                { text: "> Menyusun visualisasi data...", type: "system", delay: 9500 },
-                { text: "_DONE", type: "success", delay: 10500 }
+                { text: "> Menginisialisasi modul koneksi terenkripsi...", type: "system", delay: 800 },
+                { text: "> Melakukan validasi struktur URL target...", type: "info", delay: 1000 },
+                { text: "[SUCCESS] URL terverifikasi. Platform teridentifikasi.", type: "success", delay: 1200 },
+                { text: "> Mengoptimalkan routing request untuk stabilitas...", type: "info", delay: 1500 },
+                { text: "[NETWORK] Koneksi secure-tunnel berhasil dibangun.", type: "system", delay: 1800 },
+                { text: "> Mengonfigurasi request headers & session token...", type: "info", delay: 2500 },
+                { text: "[NOTICE] Penyesuaian throughput untuk proteksi server...", type: "warn", delay: 3500 },
+                { text: "> Mengambil paket data ulasan (Sequence 1)...", type: "info", delay: 4200 },
+                { text: "> Mengambil paket data ulasan (Sequence 2)...", type: "info", delay: 4800 },
+                { text: "> Mengambil paket data ulasan (Sequence 3)...", type: "info", delay: 5400 },
+                { text: "[OK] Berhasil mengumpulkan seluruh dataset publik.", type: "success", delay: 6000 },
+                { text: "> Menjalankan analisis semantik & NLP Pipeline...", type: "system", delay: 7500 },
+                { text: "> Normalisasi teks & eliminasi noise data...", type: "info", delay: 8200 },
+                { text: "[COMPLETE] Analisis parameter sentimen selesai.", type: "success", delay: 9000 },
+                { text: "> Menghasilkan representasi visual dataset...", type: "system", delay: 9500 },
+                { text: "_SYSTEM_READY", type: "success", delay: 10500 }
             ];
 
             analyzeBtn.addEventListener('click', async () => {
@@ -1914,14 +1914,14 @@
                     }
 
                     let finalSteps = [
-                        { text: "[OK] Terhubung ke platform target.", type: "success", delay: 500 },
-                        { text: "> Menyamarkan User-Agent & Sidik Jari Browser...", type: "info", delay: 600 },
-                        { text: "> Ekstraksi HTML & JSON metadata...", type: "info", delay: 800 },
-                        { text: `[OK] Berhasil mengekstraksi ${data.total} titik data.`, type: "success", delay: 400 },
-                        { text: "> Menjalankan NLP Pipeline (Tokenization, Stopword Removal)...", type: "system", delay: 1200 },
-                        { text: "> Kalkulasi Sentimen & Ekstraksi Kata Kunci...", type: "system", delay: 1000 },
-                        { text: "[OK] Proses analitik selesai. Mengirim payload ke dashboard...", type: "success", delay: 500 },
-                        { text: "_DONE", type: "success", delay: 500 }
+                        { text: "[NETWORK] Sinkronisasi endpoint berhasil.", type: "success", delay: 500 },
+                        { text: "> Mengenkripsi metadata & parameter request...", type: "info", delay: 600 },
+                        { text: "> Melakukan parsing data stream...", type: "info", delay: 800 },
+                        { text: `[DATA] Ekstraksi ${data.total} entri data berhasil.`, type: "success", delay: 400 },
+                        { text: "> Memproses algoritma klasifikasi sentimen...", type: "system", delay: 1200 },
+                        { text: "> Menghitung densitas kata kunci & parameter NLP...", type: "system", delay: 1000 },
+                        { text: "[SUCCESS] Payload data siap ditampilkan.", type: "success", delay: 500 },
+                        { text: "_SYSTEM_READY", type: "success", delay: 500 }
                     ];
 
                     await runSimulationLines(finalSteps);
