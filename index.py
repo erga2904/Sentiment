@@ -10,6 +10,10 @@ from datetime import datetime
 import io
 import base64
 from wordcloud import WordCloud
+try:
+    from youtube_comment_downloader import YoutubeCommentDownloader
+except ImportError:
+    YoutubeCommentDownloader = None
 
 app = Flask(__name__)
 CORS(app)  # Allow frontend to access the API
@@ -338,10 +342,11 @@ def get_youtube_video_info(url):
 def get_youtube_data(url, count_req=100):
     import time
     start_time = time.time()
-    MAX_SCRAPE_SECONDS = 45 # Safety break for hosted environments (e.g. Vercel 60s limit)
+    MAX_SCRAPE_SECONDS = 50 # Safety break for hosted environments (e.g. Vercel 60s limit)
 
     try:
-        from youtube_comment_downloader import YoutubeCommentDownloader
+        if not YoutubeCommentDownloader:
+            return None
         downloader = YoutubeCommentDownloader()
         
         seen = set()  # Deduplicate by (author, text_snippet)
@@ -365,9 +370,9 @@ def get_youtube_data(url, count_req=100):
                     text = comment.get('text', '')
                     if text:
                         author = comment.get('author', 'Anonymous')
-                        key = (author, text[:80])  # Dedupe key
-                        if key not in seen:
-                            seen.add(key)
+                        cid = str(comment.get('cid', ''))
+                        if cid not in seen:
+                            seen.add(cid)
                             progress_store['fetched'] += 1
                             
                             # Detect reply: cid with '.' means it's a reply to a parent comment
@@ -570,4 +575,4 @@ def analyze():
 if __name__ == '__main__':
     print("Sentiment Analysis Backend Starting...")
     print("Ready to analyze URLs!")
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000, threaded=True)
