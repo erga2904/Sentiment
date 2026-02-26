@@ -440,14 +440,36 @@
         }
 
         .terminal-box.minimized {
-            height: 48px !important;
-            min-height: 48px !important;
-            /* height of header */
-            transform: translateY(0);
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 320px !important;
+            height: auto !important;
+            min-height: 0 !important;
+            transform: translateY(0) scale(1) !important;
+            margin: 0 !important;
+            z-index: 10000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border-radius: 12px !important;
         }
 
         .terminal-box.minimized .terminal-body {
             display: none !important;
+        }
+
+        .modal-overlay.minimized-bg {
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            pointer-events: none;
+            visibility: hidden !important;
+            /* Let clicks pass through to the page */
+        }
+
+        .modal-overlay.minimized-bg .terminal-box {
+            pointer-events: auto;
+            visibility: visible !important;
+            /* Keep the terminal clickable */
         }
 
         .terminal-box.fullscreen {
@@ -455,10 +477,11 @@
             height: 100vh !important;
             max-width: none !important;
             border-radius: 0 !important;
-            transform: translateY(0) !important;
+            transform: translateY(0) scale(1) !important;
+            margin: 0 !important;
         }
 
-        .modal-overlay.active .terminal-box {
+        .modal-overlay.active .terminal-box:not(.minimized, .fullscreen) {
             transform: scale(1) translateY(0);
             opacity: 1;
         }
@@ -1278,11 +1301,19 @@
                         <i class="fa-solid fa-chevron-down"></i>
                     </div>
                     <div class="custom-dropdown-opts">
-                        <div class="custom-dropdown-opt" data-value="100">100 Komentar (Cepat)</div>
-                        <div class="custom-dropdown-opt" data-value="500">500 Komentar (Normal)</div>
-                        <div class="custom-dropdown-opt" data-value="1000">1000 Komentar (Dalam)</div>
-                        <div class="custom-dropdown-opt" data-value="0">Semua Komentar (Maksimal)</div>
+                        <div class="custom-dropdown-opt" data-value="100">100 Komentar</div>
+                        <div class="custom-dropdown-opt" data-value="500">500 Komentar</div>
+                        <div class="custom-dropdown-opt" data-value="1000">1000 Komentar</div>
+                        <div class="custom-dropdown-opt" data-value="3000">3000 Komentar</div>
+                        <div class="custom-dropdown-opt" data-value="0">Semua Komentar</div>
+                        <div class="custom-dropdown-opt" data-value="custom">Kustom (Input Manual)</div>
                     </div>
+                </div>
+                <div id="custom-limit-wrapper" style="display: none; align-items: center; gap: 6px;">
+                    <input type="number" id="custom-limit-input" min="1" max="100000" placeholder="Jumlah..."
+                        style="width: 110px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--glass-surface); color: var(--text-main); font-size: 0.9rem; font-family: inherit; outline: none;">
+                    <button id="custom-limit-ok" title="Terapkan"
+                        style="padding: 8px 12px; border-radius: 8px; border: none; background: linear-gradient(135deg, #38bdf8, #818cf8); color: white; cursor: pointer; font-size: 0.85rem; font-weight: 600;">OK</button>
                 </div>
                 <input type="hidden" id="quick-scrape-limit" value="0">
                 <button class="analyze-btn" id="start-analysis-btn">
@@ -1547,13 +1578,8 @@
             </div>
             <div class="terminal-body" id="cloud-body"
                 style="flex: 1; background: #0f172a; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; position: relative;">
-                <div id="cloud-loading"
-                    style="position: absolute; display: none; flex-direction: column; align-items: center; gap: 10px; color: white; z-index: 10;">
-                    <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
-                    <span>Generating Visualization...</span>
-                </div>
-                <canvas id="cloud-canvas" width="700" height="450"
-                    style="max-width: 100%; height: auto; border-radius: 8px; background: #0f172a;"></canvas>
+                <img id="cloud-image" src="" alt="Word Cloud Base64"
+                    style="max-width: 100%; max-height: 450px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); object-fit: contain;">
                 <div style="margin-top: 25px; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
                     <button id="download-cloud-btn" class="analyze-btn" style="padding: 12px 25px; font-size: 0.95rem;">
                         <i class="fa-solid fa-file-arrow-down"></i> Simpan Sebagai PNG
@@ -1942,13 +1968,44 @@
                 e.stopPropagation();
             });
 
+            const customLimitWrapper = document.getElementById('custom-limit-wrapper');
+            const customLimitInput = document.getElementById('custom-limit-input');
+            const customLimitOk = document.getElementById('custom-limit-ok');
+
             limitDropdown.querySelectorAll('.custom-dropdown-opt').forEach(opt => {
                 opt.addEventListener('click', () => {
-                    limitText.textContent = opt.textContent;
-                    limitInput.value = opt.getAttribute('data-value');
-                    limitDropdown.classList.remove('active');
+                    const val = opt.getAttribute('data-value');
+                    if (val === 'custom') {
+                        // Show custom input
+                        customLimitWrapper.style.display = 'flex';
+                        limitText.textContent = '✏️ Kustom';
+                        limitDropdown.classList.remove('active');
+                        customLimitInput.focus();
+                    } else {
+                        // Normal preset option
+                        customLimitWrapper.style.display = 'none';
+                        limitText.textContent = opt.textContent;
+                        limitInput.value = val;
+                        limitDropdown.classList.remove('active');
+                    }
                 });
             });
+
+            // Custom limit OK button
+            if (customLimitOk) {
+                customLimitOk.addEventListener('click', () => {
+                    const customVal = parseInt(customLimitInput.value);
+                    if (customVal && customVal > 0) {
+                        limitInput.value = customVal;
+                        limitText.textContent = `${customVal.toLocaleString('id-ID')} Komentar (Kustom)`;
+                        customLimitWrapper.style.display = 'none';
+                    }
+                });
+                // Also apply on Enter key
+                customLimitInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') customLimitOk.click();
+                });
+            }
 
             // Close dropdown securely
             document.addEventListener('click', (e) => {
@@ -2162,46 +2219,69 @@
 
             // --- Word Cloud ---
             document.getElementById('export-cloud-btn').addEventListener('click', () => {
-                if (!currentAnalysisData || !currentAnalysisData.keywords.length) return;
+                if (!currentAnalysisData || !currentAnalysisData.extra_stats.wordcloud_img) return;
                 cloudModal.classList.add('active');
-                renderWordCloud(currentAnalysisData.keywords);
+                renderWordCloud(currentAnalysisData.extra_stats.wordcloud_img);
             });
 
-            function renderWordCloud(keywords) {
-                const canvas = document.getElementById('cloud-canvas');
-                const loader = document.getElementById('cloud-loading');
-                loader.style.display = 'flex';
-
-                const list = keywords.map(kw => [kw.word, Math.max(12, Math.min(60, kw.count * (40 / keywords[0].count)))]);
-
-                setTimeout(() => {
-                    WordCloud(canvas, {
-                        list: list,
-                        fontFamily: 'Figtree, sans-serif',
-                        color: () => ['#38bdf8', '#818cf8', '#34d399', '#fbbf24', '#f87171'][Math.floor(Math.random() * 5)],
-                        backgroundColor: '#0f172a',
-                        rotateRatio: 0.5,
-                        gridSize: 8,
-                        weightFactor: 1.5,
-                        shrinkToFit: true
-                    });
-                    loader.style.display = 'none';
-                }, 400);
+            function renderWordCloud(base64Str) {
+                const img = document.getElementById('cloud-image');
+                img.src = base64Str;
             }
 
             document.getElementById('close-cloud-modal').addEventListener('click', () => cloudModal.classList.remove('active'));
-            document.getElementById('regenerate-cloud-btn').addEventListener('click', () => renderWordCloud(currentAnalysisData.keywords));
+
+            // Remove "Acak Posisi" as it's static base64 now
+            const regenBtn = document.getElementById('regenerate-cloud-btn');
+            if (regenBtn) regenBtn.style.display = 'none';
+
             document.getElementById('download-cloud-btn').addEventListener('click', () => {
                 const a = document.createElement('a');
-                a.href = document.getElementById('cloud-canvas').toDataURL();
-                a.download = 'wordcloud.png';
+                a.href = document.getElementById('cloud-image').src;
+                a.download = `wordcloud_python_${Date.now()}.png`;
                 a.click();
             });
 
-            // --- Modal Helpers ---
+            // --- Modal Helpers & Terminal Actions ---
             [document.getElementById('sim-dot-close'), document.getElementById('rev-dot-close'), document.getElementById('err-dot-close'), document.getElementById('btn-mengerti')].forEach(b => {
-                if (b) b.addEventListener('click', () => b.closest('.modal-overlay').classList.remove('active'));
+                if (b) b.addEventListener('click', () => {
+                    const overlay = b.closest('.modal-overlay');
+                    if (overlay) {
+                        overlay.classList.remove('active');
+                        overlay.classList.remove('minimized-bg');
+                    }
+                    if (b.id === 'sim-dot-close') {
+                        const simBox = document.querySelector('#simulation-modal .terminal-box');
+                        if (simBox) {
+                            simBox.classList.remove('minimized', 'fullscreen');
+                        }
+                    }
+                });
             });
+
+            // Terminal Minimize/Maximize
+            const simMinBtn = document.getElementById('sim-dot-min');
+            const simMaxBtn = document.getElementById('sim-dot-max');
+            const simBox = document.querySelector('#simulation-modal .terminal-box');
+            const simOverlay = document.getElementById('simulation-modal');
+
+            if (simMinBtn && simBox && simOverlay) {
+                // Minimized = Notification bar behavior (Yellow button)
+                simMinBtn.addEventListener('click', () => {
+                    simBox.classList.remove('fullscreen');
+                    simBox.classList.toggle('minimized');
+                    simOverlay.classList.toggle('minimized-bg', simBox.classList.contains('minimized'));
+                });
+            }
+
+            if (simMaxBtn && simBox && simOverlay) {
+                // Maximize = Full screen behavior (Green button)
+                simMaxBtn.addEventListener('click', () => {
+                    simBox.classList.remove('minimized');
+                    simOverlay.classList.remove('minimized-bg');
+                    simBox.classList.toggle('fullscreen');
+                });
+            }
         });
     </script>
 
