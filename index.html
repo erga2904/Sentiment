@@ -1531,12 +1531,7 @@
             </div>
             <div class="terminal-body" style="height: auto; padding: 25px;">
                 <div class="settings-grid">
-                    <div class="setting-item">
-                        <label>Batas Komentar (Scraping)</label>
-                        <input type="number" id="set-scrape-limit" class="setting-input" value="0" min="0" max="100000">
-                        <small style="color: var(--text-muted); font-size: 0.75rem;">Mempengaruhi waktu pemuatan.
-                            Gunakan <b>0</b> untuk <b>Tanpa Batas</b>.</small>
-                    </div>
+
                     <div class="setting-item">
                         <label>Batas Tampil (Ulasan Terbaru)</label>
                         <input type="number" id="set-display-limit" class="setting-input" value="10" min="1" max="100">
@@ -1935,7 +1930,6 @@
             const cloudModal = document.getElementById('wordcloud-modal');
 
             // --- Settings ---
-            document.getElementById('set-scrape-limit').value = scrapingLimit;
             document.getElementById('set-display-limit').value = displayLimit;
             document.getElementById('set-sort-by').value = sortBy;
 
@@ -1943,19 +1937,14 @@
             document.getElementById('settings-dot-close').addEventListener('click', () => settingsModal.classList.remove('active'));
 
             document.getElementById('save-settings-btn').addEventListener('click', () => {
-                scrapingLimit = parseInt(document.getElementById('set-scrape-limit').value) || 100;
                 displayLimit = parseInt(document.getElementById('set-display-limit').value) || 10;
                 sortBy = document.getElementById('set-sort-by').value;
-                localStorage.setItem('scrapeLimit', scrapingLimit);
                 localStorage.setItem('displayLimit', displayLimit);
                 localStorage.setItem('sortBy', sortBy);
                 settingsModal.classList.remove('active');
 
-                // Automatically re-scrape if a URL is present
-                const currentUrl = document.getElementById('post-url').value.trim();
-                if (currentUrl) {
-                    document.getElementById('start-analysis-btn').click();
-                } else if (currentAnalysisData) {
+                // Re-render if data already loaded
+                if (currentAnalysisData) {
                     loadDashboardData(currentAnalysisData);
                 }
             });
@@ -2146,6 +2135,11 @@
 
                         document.getElementById('start-analysis-btn').style.display = 'none';
                         document.getElementById('reset-analysis-btn').style.display = 'inline-block';
+
+                        // Hide limit controls after success
+                        document.getElementById('scrape-limit-dropdown').style.display = 'none';
+                        const customWrap = document.getElementById('custom-limit-wrapper');
+                        if (customWrap) customWrap.style.display = 'none';
                     }, 1000);
 
                 } catch (e) {
@@ -2159,6 +2153,9 @@
                 document.getElementById('detected-platform').style.opacity = '0';
                 document.getElementById('start-analysis-btn').style.display = 'inline-block';
                 document.getElementById('reset-analysis-btn').style.display = 'none';
+
+                // Show limit controls back
+                document.getElementById('scrape-limit-dropdown').style.display = 'block';
             });
 
             // --- View More Reviews ---
