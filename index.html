@@ -2058,6 +2058,12 @@
                 const termOutput = document.getElementById('terminal-output');
                 termOutput.innerHTML = '<div class="log-line system">> Menghubungkan ke secure-extraction pipeline...</div>';
                 termOutput.innerHTML += `<div class="log-line">> Target: ${url}</div>`;
+
+                // Hide limit controls IMMEDIATELY
+                document.getElementById('scrape-limit-dropdown').style.display = 'none';
+                const customWrap = document.getElementById('custom-limit-wrapper');
+                if (customWrap) customWrap.style.display = 'none';
+
                 if (scrapingLimit === 0) {
                     termOutput.innerHTML += `<div class="log-line warning">> Mode Tanpa Batas Aktif: Mengambil SEMUA data yang tersedia...</div>`;
                     termOutput.innerHTML += `<div class="log-line info">> Ini mungkin memakan waktu lebih lama tergantung volume platform.</div>`;
@@ -2069,16 +2075,18 @@
                 }
 
                 // Create placeholder line for real-time progress
-                termOutput.innerHTML += `<div class="log-line system" id="progress-line">> Mengambil data: <span id="progress-count">0</span> komentar ditarik...</div>`;
+                termOutput.innerHTML += `<div class="log-line system" id="progress-line">> <span id="progress-status">Menghubungkan ke API...</span> (<span id="progress-count">0</span> ulasan ditarik)</div>`;
 
                 // Start polling progress every 1 second
                 let isPolling = true;
+                const pStatus = document.getElementById('progress-status');
                 const pollInterval = setInterval(async () => {
                     if (!isPolling) return clearInterval(pollInterval);
                     try {
                         const progResp = await fetch(`${API_BASE_URL}/api/progress`);
                         if (progResp.ok) {
                             const progData = await progResp.json();
+                            if (pStatus) pStatus.innerText = 'Mengambil data:';
                             const pCount = document.getElementById('progress-count');
                             if (pCount && progData.fetched !== undefined) {
                                 pCount.innerText = progData.fetched;
@@ -2135,11 +2143,6 @@
 
                         document.getElementById('start-analysis-btn').style.display = 'none';
                         document.getElementById('reset-analysis-btn').style.display = 'inline-block';
-
-                        // Hide limit controls after success
-                        document.getElementById('scrape-limit-dropdown').style.display = 'none';
-                        const customWrap = document.getElementById('custom-limit-wrapper');
-                        if (customWrap) customWrap.style.display = 'none';
                     }, 1000);
 
                 } catch (e) {
