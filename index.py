@@ -7,11 +7,48 @@ import re
 import collections
 import random
 from datetime import datetime
+import io
+import base64
+from wordcloud import WordCloud
 
 app = Flask(__name__)
 CORS(app)  # Allow frontend to access the API
 
 progress_store = {'fetched': 0}
+
+def generate_wordcloud_base64(word_freq_dict):
+    """
+    Generate a WordCloud image from a dictionary of word frequencies
+    and return it as a base64 encoded string.
+    """
+    if not word_freq_dict:
+        return None
+        
+    try:
+        # Create WordCloud object with basic styling to match UI
+        wc = WordCloud(
+            width=800, 
+            height=400, 
+            background_color='#0f172a', # Match UI dark theme background
+            colormap='cool', # Built-in matplotlib colormap
+            max_words=100,
+            prefer_horizontal=0.7
+        )
+        
+        # Generate word cloud from frequencies
+        wc.generate_from_frequencies(word_freq_dict)
+        
+        # Save to BytesIO buffer
+        img_buffer = io.BytesIO()
+        wc.to_image().save(img_buffer, format='PNG')
+        img_buffer.seek(0)
+        
+        # Encode to base64
+        base64_encoded = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
+        return f"data:image/png;base64,{base64_encoded}"
+    except Exception as e:
+        print(f"Error generating wordcloud: {e}")
+        return None
 
 def clean_text(text):
     # Basic text cleaning: lowercase and remove non-alphanumeric chars
@@ -118,26 +155,15 @@ def analyze_sentiment_and_keywords(tweets_or_reviews):
                 sentiment = 'neg'
                 neg_count += 1
             else:
-                # fallback to textblob only if dictionary search is inconclusive
-                # limit textblob calls for very large datasets if needed, but for 3k it should be okay
-                tb = TextBlob(text)
-                tb_pol = tb.sentiment.polarity
-                if tb_pol > 0.1:
-                    sentiment = 'pos'
-                    pos_count += 1
-                elif tb_pol < -0.1:
-                    sentiment = 'neg'
-                    neg_count += 1
-                else:
-                    sentiment = 'neu'
-                    neu_count += 1
-                
+                sentiment = 'neu'
+                neu_count += 1
+
         processed_reviews.append({
+            'text': text,
             'author': author,
             'date': date_str,
-            'text': text,
-            'type': sentiment,
-            'rating': item.get('rating', None)
+            'rating': rating,
+            'type': sentiment
         })
 
     total = len(tweets_or_reviews)
@@ -152,6 +178,10 @@ def analyze_sentiment_and_keywords(tweets_or_reviews):
     word_counts = collections.Counter(all_words)
     top_8 = word_counts.most_common(8)
     keywords = [{'word': w[0], 'count': w[1]} for w in top_8]
+    
+    # Generate WordCloud base64 string directly from python
+    wc_frequencies = {word: count for word, count in word_counts.items()}
+    wordcloud_b64 = generate_wordcloud_base64(wc_frequencies)
     
     # Return all reviews (frontend will handle slicing and "View More" modal)
     recent_reviews = processed_reviews
@@ -191,7 +221,8 @@ def analyze_sentiment_and_keywords(tweets_or_reviews):
         'top_keyword': top_keyword,
         'top_keyword_count': top_keyword_count,
         'total_words': sum(review_lengths),
-        'unique_authors': len(set(r['author'] for r in processed_reviews))
+        'unique_authors': len(set(r['author'] for r in processed_reviews)),
+        'wordcloud_img': wordcloud_b64
     }
 
     return [pos_pct, neu_pct, neg_pct], keywords, recent_reviews, extra_stats
@@ -307,24 +338,40 @@ def get_youtube_data(url, count_req=100):
         from youtube_comment_downloader import YoutubeCommentDownloader
         downloader = YoutubeCommentDownloader()
         
-        generator = downloader.get_comments_from_url(url, sort_by=0)
-        
+        seen = set()  # Deduplicate by (author, text_snippet)
         formatted_reviews = []
-        try:
-            for comment in generator:
-                if len(formatted_reviews) >= target_count:
-                    break
-                text = comment.get('text', '')
-                if text:
-                    progress_store['fetched'] += 1
-                    formatted_reviews.append({
-                        'content': text,
-                        'author': comment.get('author', 'Anonymous'),
-                        'date': comment.get('time', 'Baru saja')
-                    })
-        except Exception as e:
-            print(f"Safe break - YouTube scraped {len(formatted_reviews)} before error: {e}")
-            pass # Graceful exit and continue to analysis
+
+        def fetch_pass(sort_mode):
+            """Fetch comments with a given sort mode, deduplicating."""
+            nonlocal formatted_reviews, seen
+            try:
+                generator = downloader.get_comments_from_url(url, sort_by=sort_mode)
+                for comment in generator:
+                    if len(formatted_reviews) >= target_count:
+                        break
+                    text = comment.get('text', '')
+                    if text:
+                        author = comment.get('author', 'Anonymous')
+                        key = (author, text[:80])  # Dedupe key
+                        if key not in seen:
+                            seen.add(key)
+                            progress_store['fetched'] += 1
+                            formatted_reviews.append({
+                                'content': text,
+                                'author': author,
+                                'date': comment.get('time', 'Baru saja')
+                            })
+            except Exception as e:
+                print(f"Safe break - YouTube sort={sort_mode} scraped {len(formatted_reviews)} before error: {e}")
+        
+        # Pass 1: sort_by=1 (NEWEST) — tends to return more comments
+        fetch_pass(1)
+        print(f"[YT] Pass 1 (Newest): {len(formatted_reviews)} comments")
+        
+        # Pass 2: sort_by=0 (TOP/Popular) — may catch extras not in newest
+        if len(formatted_reviews) < target_count:
+            fetch_pass(0)
+            print(f"[YT] Pass 2 (Top): {len(formatted_reviews)} total after merge")
                 
         if not formatted_reviews:
             return None
