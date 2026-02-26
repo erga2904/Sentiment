@@ -995,6 +995,11 @@
             text-align: right;
         }
 
+        .metadata-card-responsive {
+            display: flex;
+            flex-direction: row;
+        }
+
         .insight-box {
             background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(129, 140, 248, 0.08));
             border: 1px solid rgba(56, 189, 248, 0.2);
@@ -1023,6 +1028,76 @@
             color: #38bdf8;
         }
 
+        /* ========== CUSTOM DROPDOWN ========== */
+        .custom-dropdown {
+            position: relative;
+            width: 200px;
+            /* Adjust as needed */
+            user-select: none;
+        }
+
+        .custom-dropdown-curr {
+            background: var(--glass-surface);
+            border: 1px solid var(--glass-border);
+            color: var(--text-color);
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .custom-dropdown-opts {
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            right: 0;
+            background: #1e293b;
+            /* Solid dark background to prevent transparency overlap */
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            overflow: hidden;
+            display: none;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .custom-dropdown.active .custom-dropdown-opts {
+            display: block;
+        }
+
+        .custom-dropdown-opt {
+            padding: 10px 15px;
+            color: #f8fafc;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .custom-dropdown-opt:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .light-mode .custom-dropdown-opts {
+            background: #ffffff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .light-mode .custom-dropdown-curr {
+            background: #ffffff;
+        }
+
+        .light-mode .custom-dropdown-opt {
+            color: #1e293b;
+        }
+
+        .light-mode .custom-dropdown-opt:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+
         /* ========== RESPONSIVE ========== */
 
         /* Tablet */
@@ -1034,6 +1109,10 @@
             .url-input-container {
                 flex-direction: column;
                 gap: 12px;
+            }
+
+            .custom-dropdown {
+                width: 100%;
             }
 
             .url-input-container>.analysis-actions {
@@ -1149,6 +1228,10 @@
             #detected-platform {
                 font-size: 0.9rem !important;
             }
+
+            .metadata-card-responsive {
+                flex-direction: column;
+            }
         }
 
         /* Small phones */
@@ -1188,7 +1271,20 @@
         <div class="url-input-container">
             <input type="text" class="url-input" id="post-url"
                 placeholder="Masukkan URL postingan/aplikasi untuk dianalisa (PlayStore, YouTube, Reddit, Twitter, IG)...">
-            <div class="analysis-actions" style="display: flex; gap: 10px;">
+            <div class="analysis-actions" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <div class="custom-dropdown" id="scrape-limit-dropdown">
+                    <div class="custom-dropdown-curr">
+                        <span id="scrape-limit-text">Semua Komentar (Maksimal)</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="custom-dropdown-opts">
+                        <div class="custom-dropdown-opt" data-value="100">100 Komentar (Cepat)</div>
+                        <div class="custom-dropdown-opt" data-value="500">500 Komentar (Normal)</div>
+                        <div class="custom-dropdown-opt" data-value="1000">1000 Komentar (Dalam)</div>
+                        <div class="custom-dropdown-opt" data-value="0">Semua Komentar (Maksimal)</div>
+                    </div>
+                </div>
+                <input type="hidden" id="quick-scrape-limit" value="0">
                 <button class="analyze-btn" id="start-analysis-btn">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> Analisa Sekarang
                 </button>
@@ -1203,6 +1299,11 @@
             <div id="detected-platform"
                 style="text-align: center; margin-bottom: 20px; font-weight: 700; color: var(--text-muted); opacity: 0; transition: 0.3s; font-size: 1.1rem;">
                 <!-- Will show: Menganalisa data dari: Twitter -->
+            </div>
+
+            <div id="metadata-card" class="metadata-card-responsive"
+                style="display: none; background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: 12px; margin-bottom: 25px; overflow: hidden; gap: 15px;">
+                <!-- Content injected here -->
             </div>
 
             <!-- KPIs -->
@@ -1402,8 +1503,7 @@
                 <div class="settings-grid">
                     <div class="setting-item">
                         <label>Batas Komentar (Scraping)</label>
-                        <input type="number" id="set-scrape-limit" class="setting-input" value="100" min="0"
-                            max="100000">
+                        <input type="number" id="set-scrape-limit" class="setting-input" value="0" min="0" max="100000">
                         <small style="color: var(--text-muted); font-size: 0.75rem;">Mempengaruhi waktu pemuatan.
                             Gunakan <b>0</b> untuk <b>Tanpa Batas</b>.</small>
                     </div>
@@ -1516,7 +1616,7 @@
                 </div>
                 <h3 style="margin-bottom: 10px; font-size: 1.2rem;">Platform Tidak Didukung</h3>
                 <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 25px;">
-                    Platform <strong>Twitter (X)</strong> dan semua platform dari <strong>Meta</strong> secara ketat memblokir
+                    Platform <strong>Twitter (X)</strong> dan <strong>Instagram</strong> secara ketat memblokir
                     sistem ekstraksi otomatis (bot) tanpa API Resmi. Mencoba memaksa masuk dapat mengakibatkan
                     alamat IP Server diblokir secara permanen. Pemindaian dihentikan.
                 </p>
@@ -1551,7 +1651,7 @@
         let currentAnalysisData = null;
 
         // Settings (Persistent)
-        let scrapingLimit = localStorage.getItem('scrapeLimit') || 100;
+        let scrapingLimit = localStorage.getItem('scrapeLimit') || 0;
         let displayLimit = localStorage.getItem('displayLimit') || 10;
         let sortBy = localStorage.getItem('sortBy') || 'newest';
 
@@ -1670,6 +1770,27 @@
             const themePos = isLight ? '#10b981' : '#34d399';
             const themeNeu = isLight ? '#f59e0b' : '#fbbf24';
             const themeNeg = isLight ? '#ef4444' : '#f87171';
+
+            // 2.5 Metadata Display
+            const metaCard = document.getElementById('metadata-card');
+            if (data.metadata) {
+                metaCard.style.display = 'flex';
+                // Adjust for flex layout based on screen roughly
+                metaCard.innerHTML = `
+                    <div style="flex: 0 0 auto; max-width: 300px; padding: 15px;">
+                        <img src="${data.metadata.thumbnail}" alt="Thumbnail" style="width: 100%; border-radius: 8px; object-fit: cover;">
+                    </div>
+                    <div style="flex: 1; padding: 15px 15px 15px 0; display: flex; flex-direction: column; justify-content: center;">
+                        <h4 style="margin: 0 0 10px 0; font-size: 1.1rem; color: var(--text-main);">${data.metadata.title}</h4>
+                        <p style="margin: 0 0 15px 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; flex: 1;">${data.metadata.description}</p>
+                        <a href="${data.metadata.url}" target="_blank" class="analyze-btn" style="align-self: flex-start; text-decoration: none; padding: 8px 15px; font-size: 0.85rem; border-radius: 6px;">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Tautan Asli
+                        </a>
+                    </div>
+                `;
+            } else {
+                metaCard.style.display = 'none';
+            }
 
             if (data.trendData) {
                 trendChart.data.labels = data.trendData.labels;
@@ -1811,6 +1932,31 @@
                 }
             });
 
+            // --- Custom Dropdown Logic ---
+            const limitDropdown = document.getElementById('scrape-limit-dropdown');
+            const limitText = document.getElementById('scrape-limit-text');
+            const limitInput = document.getElementById('quick-scrape-limit');
+
+            limitDropdown.querySelector('.custom-dropdown-curr').addEventListener('click', (e) => {
+                limitDropdown.classList.toggle('active');
+                e.stopPropagation();
+            });
+
+            limitDropdown.querySelectorAll('.custom-dropdown-opt').forEach(opt => {
+                opt.addEventListener('click', () => {
+                    limitText.textContent = opt.textContent;
+                    limitInput.value = opt.getAttribute('data-value');
+                    limitDropdown.classList.remove('active');
+                });
+            });
+
+            // Close dropdown securely
+            document.addEventListener('click', (e) => {
+                if (!limitDropdown.contains(e.target)) {
+                    limitDropdown.classList.remove('active');
+                }
+            });
+
             // --- Theme Toggle ---
             document.getElementById('theme-toggle').addEventListener('click', () => {
                 document.documentElement.classList.toggle('light-mode');
@@ -1849,6 +1995,9 @@
             // --- Analysis Actions ---
             document.getElementById('start-analysis-btn').addEventListener('click', async () => {
                 const url = document.getElementById('post-url').value.trim();
+                const quickLimit = document.getElementById('quick-scrape-limit').value;
+                scrapingLimit = parseInt(quickLimit);
+
                 if (!url) return;
 
                 const lowerUrl = url.toLowerCase();
@@ -1864,10 +2013,33 @@
                 if (scrapingLimit === 0) {
                     termOutput.innerHTML += `<div class="log-line warning">> Mode Tanpa Batas Aktif: Mengambil SEMUA data yang tersedia...</div>`;
                     termOutput.innerHTML += `<div class="log-line info">> Ini mungkin memakan waktu lebih lama tergantung volume platform.</div>`;
-                } else if (scrapingLimit > 1000) {
-                    termOutput.innerHTML += `<div class="log-line warning">> Info: Deep Scrape Mode Aktif (${scrapingLimit} data).</div>`;
-                    termOutput.innerHTML += `<div class="log-line info">> Proses ribuan data mungkin memakan waktu lebih lama. Mohon tetap di halaman ini...</div>`;
+                } else {
+                    termOutput.innerHTML += `<div class="log-line warning">> Info: Target Maksimal ${scrapingLimit} data.</div>`;
+                    if (scrapingLimit > 500) {
+                        termOutput.innerHTML += `<div class="log-line info">> Proses ratusan/ribuan data mungkin memakan waktu lebih lama. Mohon tetap di halaman ini...</div>`;
+                    }
                 }
+
+                // Create placeholder line for real-time progress
+                termOutput.innerHTML += `<div class="log-line system" id="progress-line">> Mengambil data: <span id="progress-count">0</span> komentar ditarik...</div>`;
+
+                // Start polling progress every 1 second
+                let isPolling = true;
+                const pollInterval = setInterval(async () => {
+                    if (!isPolling) return clearInterval(pollInterval);
+                    try {
+                        const progResp = await fetch(`${API_BASE_URL}/api/progress`);
+                        if (progResp.ok) {
+                            const progData = await progResp.json();
+                            const pCount = document.getElementById('progress-count');
+                            if (pCount && progData.fetched !== undefined) {
+                                pCount.innerText = progData.fetched;
+                            }
+                        }
+                    } catch (e) {
+                        // ignore polling errors
+                    }
+                }, 1000);
 
                 try {
                     const resp = await fetch(`${API_BASE_URL}/api/analyze`, {
@@ -1875,14 +2047,17 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ url: url, count: parseInt(scrapingLimit) })
                     });
+
+                    isPolling = false; // Stop polling
+
                     const data = await resp.json();
                     if (data.error) throw new Error(data.error);
 
-                    termOutput.innerHTML += `<div class="log-line success">> Berhasil: ${data.reviews.length} data telah diunduh & dianalisa.</div>`;
-                    if (data.reviews.length < scrapingLimit) {
-                        termOutput.innerHTML += `<div class="log-line warning">> Info: Hanya berhasil mengambil ${data.reviews.length} data (platform membatasi akses cepat).</div>`;
+                    termOutput.innerHTML += `<div class="log-line success">> Berhasil: ${data.reviews.length} data telah selesai diunduh & dianalisa secara total.</div>`;
+                    if (data.reviews.length < scrapingLimit && scrapingLimit !== 0) {
+                        termOutput.innerHTML += `<div class="log-line warning">> Info: Hanya berhasil mengambil ${data.reviews.length} data (kemungkinan data sudah habis atau dibatasi platform).</div>`;
                     }
-                    termOutput.innerHTML += '<div class="log-line info">> Memetakan landscape sentimen...</div>';
+                    termOutput.innerHTML += '<div class="log-line info">> Memetakan landscape sentimen & merender visual...</div>';
 
                     setTimeout(() => {
                         document.body.classList.remove('hero-mode');
@@ -2033,4 +2208,3 @@
 </body>
 
 </html>
-
