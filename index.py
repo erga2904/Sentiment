@@ -163,7 +163,10 @@ def analyze_sentiment_and_keywords(tweets_or_reviews):
             'author': author,
             'date': date_str,
             'rating': rating,
-            'type': sentiment
+            'type': sentiment,
+            'is_reply': item.get('is_reply', False),
+            'votes': item.get('votes', 0),
+            'cid': item.get('cid', '')
         })
 
     total = len(tweets_or_reviews)
@@ -356,10 +359,18 @@ def get_youtube_data(url, count_req=100):
                         if key not in seen:
                             seen.add(key)
                             progress_store['fetched'] += 1
+                            
+                            # Detect reply: cid with '.' means it's a reply to a parent comment
+                            cid = comment.get('cid', '')
+                            is_reply = '.' in str(cid) if cid else False
+                            
                             formatted_reviews.append({
                                 'content': text,
                                 'author': author,
-                                'date': comment.get('time', 'Baru saja')
+                                'date': comment.get('time', 'Baru saja'),
+                                'votes': comment.get('votes', 0),
+                                'is_reply': is_reply,
+                                'cid': str(cid)
                             })
             except Exception as e:
                 print(f"Safe break - YouTube sort={sort_mode} scraped {len(formatted_reviews)} before error: {e}")
