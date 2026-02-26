@@ -336,7 +336,10 @@ def get_youtube_video_info(url):
     return None
 
 def get_youtube_data(url, count_req=100):
-    target_count = count_req if count_req > 0 else 100000
+    import time
+    start_time = time.time()
+    MAX_SCRAPE_SECONDS = 45 # Safety break for hosted environments (e.g. Vercel 60s limit)
+
     try:
         from youtube_comment_downloader import YoutubeCommentDownloader
         downloader = YoutubeCommentDownloader()
@@ -345,13 +348,20 @@ def get_youtube_data(url, count_req=100):
         formatted_reviews = []
 
         def fetch_pass(sort_mode):
-            """Fetch comments with a given sort mode, deduplicating."""
+            """Fetch comments with a given sort mode, deduplicating with timeout safety."""
             nonlocal formatted_reviews, seen
             try:
                 generator = downloader.get_comments_from_url(url, sort_by=sort_mode)
                 for comment in generator:
+                    # Safety Break 1: Requested count reached
                     if len(formatted_reviews) >= target_count:
                         break
+                    
+                    # Safety Break 2: Time limit reached (for hosting stability)
+                    if time.time() - start_time > MAX_SCRAPE_SECONDS:
+                        print(f"[YT] Safety Timeout! Stopping at {len(formatted_reviews)} comments to prevent host kill.")
+                        return # Exit the pass immediately
+                        
                     text = comment.get('text', '')
                     if text:
                         author = comment.get('author', 'Anonymous')
@@ -379,8 +389,8 @@ def get_youtube_data(url, count_req=100):
         fetch_pass(1)
         print(f"[YT] Pass 1 (Newest): {len(formatted_reviews)} comments")
         
-        # Pass 2: sort_by=0 (TOP/Popular) — may catch extras not in newest
-        if len(formatted_reviews) < target_count:
+        # Pass 2: sort_by=0 (TOP/Popular) — only if time permits and limit not reached
+        if len(formatted_reviews) < target_count and (time.time() - start_time < MAX_SCRAPE_SECONDS):
             fetch_pass(0)
             print(f"[YT] Pass 2 (Top): {len(formatted_reviews)} total after merge")
                 
