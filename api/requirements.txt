@@ -5,3 +5,4 @@ textblob==0.17.1
 requests==2.31.0
 gunicorn==21.2.0
 youtube-comment-downloader
+wordcloud==1.9.3
