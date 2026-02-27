@@ -1304,7 +1304,7 @@
                         <div class="custom-dropdown-opt" data-value="500">500 Komentar</div>
                         <div class="custom-dropdown-opt" data-value="1000">1000 Komentar</div>
                         <div class="custom-dropdown-opt" data-value="3000">3000 Komentar</div>
-                        <div class="custom-dropdown-opt" data-value="0">Semua Komentar (Gak Rekomen)</div>
+                        <div class="custom-dropdown-opt" data-value="0">Semua Komentar</div>
                         <div class="custom-dropdown-opt" data-value="custom">Kustom (Input Manual)</div>
                     </div>
                 </div>
@@ -1636,126 +1636,143 @@
                 </div>
                 <h3 style="margin-bottom: 10px; font-size: 1.2rem;">Platform Tidak Didukung</h3>
                 <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 25px;">
-                    Platform <strong>Twitter (X)</strong> dan platform dari <strong>Meta</strong> secara ketat memblokir
+                    Platform <strong>Twitter (X)</strong> dan <strong>Instagram</strong> secara ketat memblokir
                     sistem ekstraksi otomatis (bot) tanpa API Resmi. Mencoba memaksa masuk dapat mengakibatkan
                     alamat IP Server diblokir secara permanen. Pemindaian dihentikan.
                 </p>
                 <button id="btn-mengerti" class="analyze-btn" style="width: 100%; border-radius: 8px;">Mengerti</button>
             </div>
         </div>
-    </div>
+        <!-- NOTIFICATION BAR (FOR LONG RUN) -->
+        <div id="stop-notification-bar"
+            style="position: fixed; bottom: -100px; left: 0; width: 100%; background: #1e293b; border-top: 1px solid var(--glass-border); padding: 15px 30px; display: flex; align-items: center; justify-content: center; gap: 20px; z-index: 50000; transition: bottom 0.5s ease; box-shadow: 0 -10px 30px rgba(0,0,0,0.5);">
+            <div style="color: var(--text-main); font-size: 0.95rem;">
+                <i class="fa-solid fa-clock-rotate-left" style="color: var(--primary-color);"></i> Ekstraksi data sudah
+                memakan waktu cukup lama. Lanjutkan?
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button id="noti-stop-btn" class="analyze-btn"
+                    style="background: var(--color-neg); padding: 8px 20px; font-size: 0.85rem; border: none;">Hentikan
+                    & Analisis</button>
+                <button id="noti-continue-btn" class="analyze-btn"
+                    style="background: rgba(255,255,255,0.1); padding: 8px 20px; font-size: 0.85rem; border: 1px solid var(--glass-border);">Lanjutkan
+                    Saja</button>
+            </div>
+        </div>
 
-    <script>
-        // CONFIGURATION FOR DEPLOYMENT
-        const PRODUCTION_API_URL = "https://sentimentfix.vercel.app";
-        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? "http://localhost:5000"
-            : PRODUCTION_API_URL;
+        <script>
+            // CONFIGURATION FOR DEPLOYMENT
+            const PRODUCTION_API_URL = "https://sentimentfix.vercel.app";
+            const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? "http://localhost:5000"
+                : PRODUCTION_API_URL;
 
-        // AUTHENTICATION PLACEHOLDERS
-        const mockData = {
-            empty: { total: 0, percentages: [0, 0, 0], trendData: null, keywords: [], reviews: [] }
-        };
-
-        // CHART COLORS
-        let colorPos = '#34d399';
-        let colorNeu = '#fbbf24';
-        let colorNeg = '#f87171';
-        let textColor = '#f8fafc';
-
-        Chart.defaults.color = textColor;
-        Chart.defaults.font.family = 'Figtree, sans-serif';
-
-        let trendChart;
-        let distChart;
-        let currentAnalysisData = null;
-
-        // Settings (Persistent)
-        let scrapingLimit = localStorage.getItem('scrapeLimit') || 0;
-        let displayLimit = localStorage.getItem('displayLimit') || 10;
-        let sortBy = localStorage.getItem('sortBy') || 'newest';
-
-        function animateValue(obj, start, end, duration) {
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                const easeProgress = 1 - Math.pow(1 - progress, 3);
-                let current = Math.floor(easeProgress * (end - start) + start);
-                if (obj.id === 'kpi-total-val') obj.innerHTML = current.toLocaleString('id-ID');
-                else obj.innerHTML = current + '%';
-                if (progress < 1) window.requestAnimationFrame(step);
-                else obj.innerHTML = (obj.id === 'kpi-total-val') ? end.toLocaleString('id-ID') : end + '%';
+            // AUTHENTICATION PLACEHOLDERS
+            const mockData = {
+                empty: { total: 0, percentages: [0, 0, 0], trendData: null, keywords: [], reviews: [] }
             };
-            window.requestAnimationFrame(step);
-        }
 
-        function initCharts() {
-            const ctxTrend = document.getElementById('trendChart').getContext('2d');
-            const isLight = document.documentElement.classList.contains('light-mode');
-            const gColor = isLight ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+            // CHART COLORS
+            let colorPos = '#34d399';
+            let colorNeu = '#fbbf24';
+            let colorNeg = '#f87171';
+            let textColor = '#f8fafc';
 
-            trendChart = new Chart(ctxTrend, {
-                type: 'line',
-                data: { labels: [], datasets: [] },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { color: isLight ? '#1e293b' : '#f8fafc' }
-                        },
-                        tooltip: {
-                            backgroundColor: isLight ? 'rgba(255, 255, 255, 0.9)' : 'rgba(15, 23, 42, 0.9)',
-                            titleColor: isLight ? '#1e293b' : '#f8fafc',
-                            bodyColor: isLight ? '#1e293b' : '#f8fafc',
-                            borderColor: isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)',
-                            borderWidth: 1,
-                        }
-                    },
-                    scales: {
-                        x: { grid: { color: gColor } },
-                        y: { grid: { color: gColor } }
-                    }
-                }
-            });
-            const ctxDist = document.getElementById('distChart').getContext('2d');
-            distChart = new Chart(ctxDist, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Positif', 'Netral', 'Negatif'],
-                    datasets: [{ data: [0, 0, 0], backgroundColor: [colorPos, colorNeu, colorNeg], borderWidth: 0, hoverOffset: 10 }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '70%',
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { color: isLight ? '#1e293b' : '#f8fafc' }
-                        }
-                    }
-                }
-            });
-        }
+            Chart.defaults.color = textColor;
+            Chart.defaults.font.family = 'Figtree, sans-serif';
 
-        function getReviewTypeInfo(type) {
-            switch (type) {
-                case 'pos': return { label: 'Positif', icon: 'fa-face-smile', badge: 'badge-pos', color: '#34d399' };
-                case 'neu': return { label: 'Netral', icon: 'fa-face-meh', badge: 'badge-neu', color: '#fbbf24' };
-                case 'neg': return { label: 'Negatif', icon: 'fa-face-frown', badge: 'badge-neg', color: '#f87171' };
-                default: return { label: 'Netral', icon: 'fa-face-meh', badge: 'badge-neu', color: '#94a3b8' };
+            let trendChart;
+            let distChart;
+            let currentAnalysisData = null;
+            let scrapingTimer = null;
+            let scrapeStartTime = null;
+
+            // Settings (Persistent)
+            let scrapingLimit = localStorage.getItem('scrapeLimit') || 0;
+            let displayLimit = localStorage.getItem('displayLimit') || 10;
+            let sortBy = localStorage.getItem('sortBy') || 'newest';
+
+            function animateValue(obj, start, end, duration) {
+                let startTimestamp = null;
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    const easeProgress = 1 - Math.pow(1 - progress, 3);
+                    let current = Math.floor(easeProgress * (end - start) + start);
+                    if (obj.id === 'kpi-total-val') obj.innerHTML = current.toLocaleString('id-ID');
+                    else obj.innerHTML = current + '%';
+                    if (progress < 1) window.requestAnimationFrame(step);
+                    else obj.innerHTML = (obj.id === 'kpi-total-val') ? end.toLocaleString('id-ID') : end + '%';
+                };
+                window.requestAnimationFrame(step);
             }
-        }
 
-        function formatReviewText(text) {
-            const limit = 300;
-            if (text.length <= limit) return text;
-            const shortText = text.substring(0, limit) + '...';
-            return `
+            function initCharts() {
+                const ctxTrend = document.getElementById('trendChart').getContext('2d');
+                const isLight = document.documentElement.classList.contains('light-mode');
+                const gColor = isLight ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+
+                trendChart = new Chart(ctxTrend, {
+                    type: 'line',
+                    data: { labels: [], datasets: [] },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: isLight ? '#1e293b' : '#f8fafc' }
+                            },
+                            tooltip: {
+                                backgroundColor: isLight ? 'rgba(255, 255, 255, 0.9)' : 'rgba(15, 23, 42, 0.9)',
+                                titleColor: isLight ? '#1e293b' : '#f8fafc',
+                                bodyColor: isLight ? '#1e293b' : '#f8fafc',
+                                borderColor: isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)',
+                                borderWidth: 1,
+                            }
+                        },
+                        scales: {
+                            x: { grid: { color: gColor } },
+                            y: { grid: { color: gColor } }
+                        }
+                    }
+                });
+                const ctxDist = document.getElementById('distChart').getContext('2d');
+                distChart = new Chart(ctxDist, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Positif', 'Netral', 'Negatif'],
+                        datasets: [{ data: [0, 0, 0], backgroundColor: [colorPos, colorNeu, colorNeg], borderWidth: 0, hoverOffset: 10 }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: isLight ? '#1e293b' : '#f8fafc' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function getReviewTypeInfo(type) {
+                switch (type) {
+                    case 'pos': return { label: 'Positif', icon: 'fa-face-smile', badge: 'badge-pos', color: '#34d399' };
+                    case 'neu': return { label: 'Netral', icon: 'fa-face-meh', badge: 'badge-neu', color: '#fbbf24' };
+                    case 'neg': return { label: 'Negatif', icon: 'fa-face-frown', badge: 'badge-neg', color: '#f87171' };
+                    default: return { label: 'Netral', icon: 'fa-face-meh', badge: 'badge-neu', color: '#94a3b8' };
+                }
+            }
+
+            function formatReviewText(text) {
+                const limit = 300;
+                if (text.length <= limit) return text;
+                const shortText = text.substring(0, limit) + '...';
+                return `
                 <span class="short-text">${shortText}</span>
                 <span class="full-text" style="display: none;">${text}</span>
                 <a href="javascript:void(0)" class="read-more-link" style="color: var(--primary-color); font-size: 0.9em; text-decoration: none; display: inline-block; margin-top: 5px;" onclick="
@@ -1773,30 +1790,30 @@
                     }
                 ">Lihat Selengkapnya</a>
             `;
-        }
+            }
 
-        function loadDashboardData(data) {
-            if (!data) return;
-            currentAnalysisData = data;
+            function loadDashboardData(data) {
+                if (!data) return;
+                currentAnalysisData = data;
 
-            // 1. KPIs
-            animateValue(document.getElementById('kpi-total-val'), 0, data.total, 800);
-            animateValue(document.getElementById('kpi-pos-val'), 0, data.percentages[0], 800);
-            animateValue(document.getElementById('kpi-neu-val'), 0, data.percentages[1], 800);
-            animateValue(document.getElementById('kpi-neg-val'), 0, data.percentages[2], 800);
+                // 1. KPIs
+                animateValue(document.getElementById('kpi-total-val'), 0, data.total, 800);
+                animateValue(document.getElementById('kpi-pos-val'), 0, data.percentages[0], 800);
+                animateValue(document.getElementById('kpi-neu-val'), 0, data.percentages[1], 800);
+                animateValue(document.getElementById('kpi-neg-val'), 0, data.percentages[2], 800);
 
-            // 2. Charts Theme Adaptation
-            const isLight = document.documentElement.classList.contains('light-mode');
-            const themePos = isLight ? '#10b981' : '#34d399';
-            const themeNeu = isLight ? '#f59e0b' : '#fbbf24';
-            const themeNeg = isLight ? '#ef4444' : '#f87171';
+                // 2. Charts Theme Adaptation
+                const isLight = document.documentElement.classList.contains('light-mode');
+                const themePos = isLight ? '#10b981' : '#34d399';
+                const themeNeu = isLight ? '#f59e0b' : '#fbbf24';
+                const themeNeg = isLight ? '#ef4444' : '#f87171';
 
-            // 2.5 Metadata Display
-            const metaCard = document.getElementById('metadata-card');
-            if (data.metadata) {
-                metaCard.style.display = 'flex';
-                // Adjust for flex layout based on screen roughly
-                metaCard.innerHTML = `
+                // 2.5 Metadata Display
+                const metaCard = document.getElementById('metadata-card');
+                if (data.metadata) {
+                    metaCard.style.display = 'flex';
+                    // Adjust for flex layout based on screen roughly
+                    metaCard.innerHTML = `
                     <div style="flex: 0 0 auto; max-width: 300px; padding: 15px;">
                         <img src="${data.metadata.thumbnail}" alt="Thumbnail" style="width: 100%; border-radius: 8px; object-fit: cover;" onerror="this.parentElement.style.display='none';">
                     </div>
@@ -1808,52 +1825,70 @@
                         </a>
                     </div>
                 `;
-            } else {
-                metaCard.style.display = 'none';
-            }
-
-            if (data.trendData) {
-                trendChart.data.labels = data.trendData.labels;
-                trendChart.data.datasets = [
-                    { label: 'Positif', data: data.trendData.datasets[0].data, borderColor: themePos, backgroundColor: themePos + '22', fill: 'start', tension: 0.4 },
-                    { label: 'Netral', data: data.trendData.datasets[1].data, borderColor: themeNeu, backgroundColor: themeNeu + '22', fill: 'start', tension: 0.4 },
-                    { label: 'Negatif', data: data.trendData.datasets[2].data, borderColor: themeNeg, backgroundColor: themeNeg + '22', fill: 'start', tension: 0.4 }
-                ];
-                trendChart.update();
-            }
-
-            distChart.data.datasets[0].data = data.percentages;
-            distChart.data.datasets[0].backgroundColor = [themePos, themeNeu, themeNeg];
-            distChart.update();
-
-            // 3. Keywords
-            const kwContainer = document.getElementById('keywords-container');
-            kwContainer.innerHTML = '';
-            data.keywords.forEach(kw => {
-                const tag = document.createElement('div');
-                tag.className = 'keyword-tag';
-                tag.innerHTML = `<span>${kw.word}</span> <span class="keyword-count">${kw.count}</span>`;
-                kwContainer.appendChild(tag);
-            });
-
-            // 4. Reviews with Limit and Sorting
-            const rvContainer = document.getElementById('reviews-list');
-            rvContainer.innerHTML = '';
-            let sortedReviews = [...data.reviews];
-            if (sortBy === 'rating-high') sortedReviews.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-            else if (sortBy === 'rating-low') sortedReviews.sort((a, b) => (a.rating || 0) - (b.rating || 0));
-
-            sortedReviews.slice(0, displayLimit).forEach((rv, i) => {
-                const info = getReviewTypeInfo(rv.type);
-                let ratingHtml = '';
-                if (rv.rating) {
-                    const stars = '★'.repeat(Math.round(rv.rating)) + '☆'.repeat(5 - Math.round(rv.rating));
-                    ratingHtml = `<div style="color: #fbbf24; font-size: 0.9em; margin-top: 5px;">${stars}</div>`;
+                } else {
+                    metaCard.style.display = 'none';
                 }
-                const replyStyle = rv.is_reply ? 'margin-left: 30px; border-left: 2px solid rgba(129,140,248,0.3); padding-left: 12px;' : '';
-                const replyBadge = rv.is_reply ? '<span style="font-size:0.75rem; color:#818cf8; margin-left:6px;"><i class="fa-solid fa-reply"></i> Balasan</span>' : '';
-                const votesHtml = rv.votes ? `<span style="font-size:0.78rem; color:var(--text-muted); margin-left:8px;"><i class="fa-solid fa-thumbs-up"></i> ${rv.votes}</span>` : '';
-                rvContainer.insertAdjacentHTML('beforeend', `
+
+                if (data.trendData) {
+                    trendChart.data.labels = data.trendData.labels;
+                    trendChart.data.datasets = [
+                        { label: 'Positif', data: data.trendData.datasets[0].data, borderColor: themePos, backgroundColor: themePos + '22', fill: 'start', tension: 0.4 },
+                        { label: 'Netral', data: data.trendData.datasets[1].data, borderColor: themeNeu, backgroundColor: themeNeu + '22', fill: 'start', tension: 0.4 },
+                        { label: 'Negatif', data: data.trendData.datasets[2].data, borderColor: themeNeg, backgroundColor: themeNeg + '22', fill: 'start', tension: 0.4 }
+                    ];
+                    trendChart.update();
+                }
+
+                distChart.data.datasets[0].data = data.percentages;
+                distChart.data.datasets[0].backgroundColor = [themePos, themeNeu, themeNeg];
+                distChart.update();
+
+                // 3. Keywords
+                const kwContainer = document.getElementById('keywords-container');
+                kwContainer.innerHTML = '';
+                data.keywords.forEach(kw => {
+                    const tag = document.createElement('div');
+                    tag.className = 'keyword-tag';
+                    tag.innerHTML = `<span>${kw.word}</span> <span class="keyword-count">${kw.count}</span>`;
+                    kwContainer.appendChild(tag);
+                });
+
+                // 4. Reviews with Limit and Sorting
+                const rvContainer = document.getElementById('reviews-list');
+                rvContainer.innerHTML = '';
+
+                let sortedReviews = [...data.reviews];
+
+                // Fix sorting logic
+                if (sortBy === 'newest') {
+                    // If the platform doesn't provide dates we can parse, we assume the original order is 'newest'
+                    // This is generally true for YouTube 'NEWEST' and Play Store default
+                    // For Reddit, we already fetched newest
+                } else if (sortBy === 'rating-high') {
+                    sortedReviews.sort((a, b) => {
+                        const factorA = a.rating || (a.votes / 100) || 0;
+                        const factorB = b.rating || (b.votes / 100) || 0;
+                        return factorB - factorA;
+                    });
+                } else if (sortBy === 'rating-low') {
+                    sortedReviews.sort((a, b) => {
+                        const factorA = a.rating || (a.votes / 100) || 0;
+                        const factorB = b.rating || (b.votes / 100) || 0;
+                        return factorA - factorB;
+                    });
+                }
+
+                sortedReviews.slice(0, displayLimit).forEach((rv, i) => {
+                    const info = getReviewTypeInfo(rv.type);
+                    let ratingHtml = '';
+                    if (rv.rating) {
+                        const stars = '★'.repeat(Math.round(rv.rating)) + '☆'.repeat(5 - Math.round(rv.rating));
+                        ratingHtml = `<div style="color: #fbbf24; font-size: 0.9em; margin-top: 5px;">${stars}</div>`;
+                    }
+                    const replyStyle = rv.is_reply ? 'margin-left: 30px; border-left: 2px solid rgba(129,140,248,0.3); padding-left: 12px;' : '';
+                    const replyBadge = rv.is_reply ? '<span style="font-size:0.75rem; color:#818cf8; margin-left:6px;"><i class="fa-solid fa-reply"></i> Balasan</span>' : '';
+                    const votesHtml = rv.votes ? `<span style="font-size:0.78rem; color:var(--text-muted); margin-left:8px;"><i class="fa-solid fa-thumbs-up"></i> ${rv.votes}</span>` : '';
+                    rvContainer.insertAdjacentHTML('beforeend', `
                     <div class="review-item" style="animation: fadeIn 0.4s ease forwards ${i * 0.1}s; ${replyStyle}">
                         <div class="review-avatar"><i class="fa-regular ${rv.is_reply ? 'fa-comment' : 'fa-user'}"></i></div>
                         <div class="review-content">
@@ -1863,451 +1898,484 @@
                         </div>
                     </div>
                 `);
-            });
+                });
 
-            const moreCount = data.reviews.length - displayLimit;
-            const viewMoreBtn = document.getElementById('view-more-reviews-btn');
-            if (moreCount > 0) {
-                viewMoreBtn.style.display = 'inline-block';
-                document.getElementById('more-reviews-count').textContent = moreCount;
-            } else {
-                viewMoreBtn.style.display = 'none';
-            }
+                const moreCount = data.reviews.length - displayLimit;
+                const viewMoreBtn = document.getElementById('view-more-reviews-btn');
+                if (moreCount > 0) {
+                    viewMoreBtn.style.display = 'inline-block';
+                    document.getElementById('more-reviews-count').textContent = moreCount;
+                } else {
+                    viewMoreBtn.style.display = 'none';
+                }
 
-            // 5. Extra Stats & Insights
-            if (data.extra_stats) {
-                const s = data.extra_stats;
-                document.getElementById('stat-avg-len').textContent = s.avg_length;
-                document.getElementById('stat-unique-authors').textContent = s.unique_authors;
-                document.getElementById('stat-total-words').textContent = s.total_words.toLocaleString('id-ID');
-                document.getElementById('stat-top-kw').textContent = `"${s.top_keyword}"`;
+                // 5. Extra Stats & Insights
+                if (data.extra_stats) {
+                    const s = data.extra_stats;
+                    document.getElementById('stat-avg-len').textContent = s.avg_length;
+                    document.getElementById('stat-unique-authors').textContent = s.unique_authors;
+                    document.getElementById('stat-total-words').textContent = s.total_words.toLocaleString('id-ID');
+                    document.getElementById('stat-top-kw').textContent = `"${s.top_keyword}"`;
 
-                const dom = getReviewTypeInfo(s.dominant_sentiment);
-                document.getElementById('stat-dominant').innerHTML = `<span style="color:${dom.color}">${dom.label}</span>`;
-                document.getElementById('stat-dominant-desc').textContent = `${s.dominant_pct}% ulasan ${dom.label.toLowerCase()}`;
+                    const dom = getReviewTypeInfo(s.dominant_sentiment);
+                    document.getElementById('stat-dominant').innerHTML = `<span style="color:${dom.color}">${dom.label}</span>`;
+                    document.getElementById('stat-dominant-desc').textContent = `${s.dominant_pct}% ulasan ${dom.label.toLowerCase()}`;
 
-                document.getElementById('stat-longest').textContent = s.longest_words;
+                    document.getElementById('stat-longest').textContent = s.longest_words;
 
-                document.getElementById('stats-grid').style.display = 'grid';
-                document.getElementById('insight-box').style.display = 'flex';
-                document.getElementById('insight-text').innerHTML = `
+                    document.getElementById('stats-grid').style.display = 'grid';
+                    document.getElementById('insight-box').style.display = 'flex';
+                    document.getElementById('insight-text').innerHTML = `
                     Analisis terhadap <strong>${data.reviews.length} ulasan</strong> menunjukkan sentimen dominan adalah <strong>${dom.label} (${s.dominant_pct}%)</strong>. 
                     Topik yang paling sering dibahas berkaitan dengan "<strong>${s.top_keyword}</strong>".
                 `;
 
-                // Rating Distribution
-                const ratingCard = document.getElementById('rating-dist-card');
-                if (s.rating_distribution) {
-                    ratingCard.style.display = 'block';
-                    const ratingBars = document.getElementById('rating-bars');
-                    ratingBars.innerHTML = '';
-                    const rd = s.rating_distribution;
-                    const maxVal = Math.max(...Object.values(rd), 1);
-                    const colors = { 5: '#34d399', 4: '#6ee7b7', 3: '#fbbf24', 2: '#fb923c', 1: '#f87171' };
-                    for (let i = 5; i >= 1; i--) {
-                        const count = rd[i] || 0;
-                        const pct = (count / maxVal) * 100;
-                        ratingBars.innerHTML += `
+                    // Rating Distribution
+                    const ratingCard = document.getElementById('rating-dist-card');
+                    if (s.rating_distribution) {
+                        ratingCard.style.display = 'block';
+                        const ratingBars = document.getElementById('rating-bars');
+                        ratingBars.innerHTML = '';
+                        const rd = s.rating_distribution;
+                        const maxVal = Math.max(...Object.values(rd), 1);
+                        const colors = { 5: '#34d399', 4: '#6ee7b7', 3: '#fbbf24', 2: '#fb923c', 1: '#f87171' };
+                        for (let i = 5; i >= 1; i--) {
+                            const count = rd[i] || 0;
+                            const pct = (count / maxVal) * 100;
+                            ratingBars.innerHTML += `
                             <div class="rating-bar-container">
                                 <span class="rating-bar-label">${i} <i class="fa-solid fa-star"></i></span>
                                 <div class="rating-bar-track"><div class="rating-bar-fill" style="width: ${pct}%; background: ${colors[i]}"></div></div>
                                 <span class="rating-bar-count">${count}</span>
                             </div>
                         `;
-                    }
-                } else {
-                    ratingCard.style.display = 'none';
-                }
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            initCharts();
-
-            const simModal = document.getElementById('simulation-modal');
-            const reviewsModal = document.getElementById('reviews-modal');
-            const settingsModal = document.getElementById('settings-modal');
-            const cloudModal = document.getElementById('wordcloud-modal');
-
-            // --- Settings ---
-            document.getElementById('set-display-limit').value = displayLimit;
-            document.getElementById('set-sort-by').value = sortBy;
-
-            document.getElementById('settings-toggle').addEventListener('click', () => settingsModal.classList.add('active'));
-            document.getElementById('settings-dot-close').addEventListener('click', () => settingsModal.classList.remove('active'));
-
-            document.getElementById('save-settings-btn').addEventListener('click', () => {
-                displayLimit = parseInt(document.getElementById('set-display-limit').value) || 10;
-                sortBy = document.getElementById('set-sort-by').value;
-                localStorage.setItem('displayLimit', displayLimit);
-                localStorage.setItem('sortBy', sortBy);
-                settingsModal.classList.remove('active');
-
-                // Re-render if data already loaded
-                if (currentAnalysisData) {
-                    loadDashboardData(currentAnalysisData);
-                }
-            });
-
-            // --- Custom Dropdown Logic ---
-            const limitDropdown = document.getElementById('scrape-limit-dropdown');
-            const limitText = document.getElementById('scrape-limit-text');
-            const limitInput = document.getElementById('quick-scrape-limit');
-
-            limitDropdown.querySelector('.custom-dropdown-curr').addEventListener('click', (e) => {
-                limitDropdown.classList.toggle('active');
-                e.stopPropagation();
-            });
-
-            const customLimitWrapper = document.getElementById('custom-limit-wrapper');
-            const customLimitInput = document.getElementById('custom-limit-input');
-            const customLimitOk = document.getElementById('custom-limit-ok');
-
-            limitDropdown.querySelectorAll('.custom-dropdown-opt').forEach(opt => {
-                opt.addEventListener('click', () => {
-                    const val = opt.getAttribute('data-value');
-                    if (val === 'custom') {
-                        // Show custom input
-                        customLimitWrapper.style.display = 'flex';
-                        limitText.textContent = '✏️ Kustom';
-                        limitDropdown.classList.remove('active');
-                        customLimitInput.focus();
-                    } else {
-                        // Normal preset option
-                        customLimitWrapper.style.display = 'none';
-                        limitText.textContent = opt.textContent;
-                        limitInput.value = val;
-                        limitDropdown.classList.remove('active');
-                    }
-                });
-            });
-
-            // Custom limit OK button
-            if (customLimitOk) {
-                customLimitOk.addEventListener('click', () => {
-                    const customVal = parseInt(customLimitInput.value);
-                    if (customVal && customVal > 0) {
-                        limitInput.value = customVal;
-                        limitText.textContent = `${customVal.toLocaleString('id-ID')} Komentar (Kustom)`;
-                        customLimitWrapper.style.display = 'none';
-                    }
-                });
-                // Also apply on Enter key
-                customLimitInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') customLimitOk.click();
-                });
-            }
-
-            // Close dropdown securely
-            document.addEventListener('click', (e) => {
-                if (!limitDropdown.contains(e.target)) {
-                    limitDropdown.classList.remove('active');
-                }
-            });
-
-            // --- Theme Toggle ---
-            document.getElementById('theme-toggle').addEventListener('click', () => {
-                document.documentElement.classList.toggle('light-mode');
-                const isLight = document.documentElement.classList.contains('light-mode');
-                const newTextColor = isLight ? '#1e293b' : '#f8fafc';
-                const newGridColor = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
-
-                Chart.defaults.color = newTextColor;
-                [trendChart, distChart].forEach(chart => {
-                    if (chart.options.plugins.legend) {
-                        if (!chart.options.plugins.legend.labels) chart.options.plugins.legend.labels = {};
-                        chart.options.plugins.legend.labels.color = newTextColor;
-                    }
-
-                    if (chart.options.scales) {
-                        Object.values(chart.options.scales).forEach(scale => {
-                            if (scale.grid) scale.grid.color = newGridColor;
-                            if (scale.ticks) scale.ticks.color = newTextColor;
-                        });
-                    }
-
-                    if (chart.options.plugins.tooltip) {
-                        chart.options.plugins.tooltip.backgroundColor = isLight ? 'rgba(255, 255, 255, 0.9)' : 'rgba(15, 23, 42, 0.9)';
-                        chart.options.plugins.tooltip.titleColor = isLight ? '#1e293b' : '#f8fafc';
-                        chart.options.plugins.tooltip.bodyColor = isLight ? '#1e293b' : '#f8fafc';
-                        chart.options.plugins.tooltip.borderColor = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
-                    }
-                    chart.update();
-                });
-
-                document.getElementById('dark-icon').style.display = isLight ? 'none' : 'inline-block';
-                document.getElementById('light-icon').style.display = isLight ? 'inline-block' : 'none';
-                if (currentAnalysisData) loadDashboardData(currentAnalysisData);
-            });
-
-            // --- Analysis Actions ---
-            document.getElementById('start-analysis-btn').addEventListener('click', async () => {
-                const url = document.getElementById('post-url').value.trim();
-                const quickLimit = document.getElementById('quick-scrape-limit').value;
-                scrapingLimit = parseInt(quickLimit);
-
-                if (!url) return;
-
-                const lowerUrl = url.toLowerCase();
-                if (lowerUrl.includes('instagram.com') || lowerUrl.includes('twitter.com') || lowerUrl.includes('x.com')) {
-                    document.getElementById('error-modal').classList.add('active');
-                    return;
-                }
-
-                simModal.classList.add('active');
-                const termOutput = document.getElementById('terminal-output');
-                termOutput.innerHTML = '<div class="log-line system">> Menghubungkan ke secure-extraction pipeline...</div>';
-                termOutput.innerHTML += `<div class="log-line">> Target: ${url}</div>`;
-
-                // Hide limit controls IMMEDIATELY
-                document.getElementById('scrape-limit-dropdown').style.display = 'none';
-                const customWrap = document.getElementById('custom-limit-wrapper');
-                if (customWrap) customWrap.style.display = 'none';
-
-                if (scrapingLimit === 0) {
-                    termOutput.innerHTML += `<div class="log-line warning">> Mode Tanpa Batas Aktif: Mengambil SEMUA data yang tersedia...</div>`;
-                    termOutput.innerHTML += `<div class="log-line info">> Ini mungkin memakan waktu lebih lama tergantung volume platform.</div>`;
-                } else {
-                    termOutput.innerHTML += `<div class="log-line warning">> Info: Target Maksimal ${scrapingLimit} data.</div>`;
-                    if (scrapingLimit > 500) {
-                        termOutput.innerHTML += `<div class="log-line info">> Proses ratusan/ribuan data mungkin memakan waktu lebih lama. Mohon tetap di halaman ini...</div>`;
-                    }
-                }
-
-                // Create placeholder line for real-time progress
-                termOutput.innerHTML += `<div class="log-line system" id="progress-line">> <span id="progress-status">Menghubungkan ke API...</span> (<span id="progress-count">0</span> ulasan ditarik)</div>`;
-
-                // Start polling progress every 1 second
-                let isPolling = true;
-                const pStatus = document.getElementById('progress-status');
-                const pollInterval = setInterval(async () => {
-                    if (!isPolling) return clearInterval(pollInterval);
-                    try {
-                        const progResp = await fetch(`${API_BASE_URL}/api/progress`);
-                        if (progResp.ok) {
-                            const progData = await progResp.json();
-                            if (pStatus) pStatus.innerText = 'Mengambil data:';
-                            const pCount = document.getElementById('progress-count');
-                            if (pCount && progData.fetched !== undefined) {
-                                pCount.innerText = progData.fetched;
-                            }
                         }
-                    } catch (e) {
-                        // ignore polling errors
+                    } else {
+                        ratingCard.style.display = 'none';
                     }
-                }, 1000);
+                }
+            }
 
-                try {
-                    const resp = await fetch(`${API_BASE_URL}/api/analyze`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ url: url, count: parseInt(scrapingLimit) })
+            document.addEventListener('DOMContentLoaded', () => {
+                initCharts();
+
+                const simModal = document.getElementById('simulation-modal');
+                const reviewsModal = document.getElementById('reviews-modal');
+                const settingsModal = document.getElementById('settings-modal');
+                const cloudModal = document.getElementById('wordcloud-modal');
+
+                // --- Settings ---
+                document.getElementById('set-display-limit').value = displayLimit;
+                document.getElementById('set-sort-by').value = sortBy;
+
+                document.getElementById('settings-toggle').addEventListener('click', () => settingsModal.classList.add('active'));
+                document.getElementById('settings-dot-close').addEventListener('click', () => settingsModal.classList.remove('active'));
+
+                document.getElementById('save-settings-btn').addEventListener('click', () => {
+                    displayLimit = parseInt(document.getElementById('set-display-limit').value) || 10;
+                    sortBy = document.getElementById('set-sort-by').value;
+                    localStorage.setItem('displayLimit', displayLimit);
+                    localStorage.setItem('sortBy', sortBy);
+                    settingsModal.classList.remove('active');
+
+                    // Re-render if data already loaded
+                    if (currentAnalysisData) {
+                        loadDashboardData(currentAnalysisData);
+                    }
+                });
+
+                // --- Custom Dropdown Logic ---
+                const limitDropdown = document.getElementById('scrape-limit-dropdown');
+                const limitText = document.getElementById('scrape-limit-text');
+                const limitInput = document.getElementById('quick-scrape-limit');
+
+                limitDropdown.querySelector('.custom-dropdown-curr').addEventListener('click', (e) => {
+                    limitDropdown.classList.toggle('active');
+                    e.stopPropagation();
+                });
+
+                const customLimitWrapper = document.getElementById('custom-limit-wrapper');
+                const customLimitInput = document.getElementById('custom-limit-input');
+                const customLimitOk = document.getElementById('custom-limit-ok');
+
+                limitDropdown.querySelectorAll('.custom-dropdown-opt').forEach(opt => {
+                    opt.addEventListener('click', () => {
+                        const val = opt.getAttribute('data-value');
+                        if (val === 'custom') {
+                            // Show custom input
+                            customLimitWrapper.style.display = 'flex';
+                            limitText.textContent = '✏️ Kustom';
+                            limitDropdown.classList.remove('active');
+                            customLimitInput.focus();
+                        } else {
+                            // Normal preset option
+                            customLimitWrapper.style.display = 'none';
+                            limitText.textContent = opt.textContent;
+                            limitInput.value = val;
+                            limitDropdown.classList.remove('active');
+                        }
+                    });
+                });
+
+                // Custom limit OK button
+                if (customLimitOk) {
+                    customLimitOk.addEventListener('click', () => {
+                        const customVal = parseInt(customLimitInput.value);
+                        if (customVal && customVal > 0) {
+                            limitInput.value = customVal;
+                            limitText.textContent = `${customVal.toLocaleString('id-ID')} Komentar (Kustom)`;
+                            customLimitWrapper.style.display = 'none';
+                        }
+                    });
+                    // Also apply on Enter key
+                    customLimitInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') customLimitOk.click();
+                    });
+                }
+
+                // Close dropdown securely
+                document.addEventListener('click', (e) => {
+                    if (!limitDropdown.contains(e.target)) {
+                        limitDropdown.classList.remove('active');
+                    }
+                });
+
+                // --- Theme Toggle ---
+                document.getElementById('theme-toggle').addEventListener('click', () => {
+                    document.documentElement.classList.toggle('light-mode');
+                    const isLight = document.documentElement.classList.contains('light-mode');
+                    const newTextColor = isLight ? '#1e293b' : '#f8fafc';
+                    const newGridColor = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+
+                    Chart.defaults.color = newTextColor;
+                    [trendChart, distChart].forEach(chart => {
+                        if (chart.options.plugins.legend) {
+                            if (!chart.options.plugins.legend.labels) chart.options.plugins.legend.labels = {};
+                            chart.options.plugins.legend.labels.color = newTextColor;
+                        }
+
+                        if (chart.options.scales) {
+                            Object.values(chart.options.scales).forEach(scale => {
+                                if (scale.grid) scale.grid.color = newGridColor;
+                                if (scale.ticks) scale.ticks.color = newTextColor;
+                            });
+                        }
+
+                        if (chart.options.plugins.tooltip) {
+                            chart.options.plugins.tooltip.backgroundColor = isLight ? 'rgba(255, 255, 255, 0.9)' : 'rgba(15, 23, 42, 0.9)';
+                            chart.options.plugins.tooltip.titleColor = isLight ? '#1e293b' : '#f8fafc';
+                            chart.options.plugins.tooltip.bodyColor = isLight ? '#1e293b' : '#f8fafc';
+                            chart.options.plugins.tooltip.borderColor = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+                        }
+                        chart.update();
                     });
 
-                    isPolling = false; // Stop polling
+                    document.getElementById('dark-icon').style.display = isLight ? 'none' : 'inline-block';
+                    document.getElementById('light-icon').style.display = isLight ? 'inline-block' : 'none';
+                    if (currentAnalysisData) loadDashboardData(currentAnalysisData);
+                });
 
-                    if (!resp.ok) {
-                        const errorText = await resp.text();
-                        let errorMsg = "Terjadi kesalahan pada server.";
-                        try {
-                            const errorObj = JSON.parse(errorText);
-                            errorMsg = errorObj.error || errorObj.message || errorMsg;
-                        } catch (parseErr) {
-                            // If not JSON, use the status text or a snippet of the response
-                            errorMsg = `Server Error (${resp.status}): ${errorText.substring(0, 50)}${errorText.length > 50 ? '...' : ''}`;
-                        }
-                        throw new Error(errorMsg);
+                // --- Analysis Actions ---
+                document.getElementById('start-analysis-btn').addEventListener('click', async () => {
+                    const url = document.getElementById('post-url').value.trim();
+                    const quickLimit = document.getElementById('quick-scrape-limit').value;
+                    scrapingLimit = parseInt(quickLimit);
+
+                    if (!url) return;
+
+                    const lowerUrl = url.toLowerCase();
+                    if (lowerUrl.includes('instagram.com') || lowerUrl.includes('twitter.com') || lowerUrl.includes('x.com')) {
+                        document.getElementById('error-modal').classList.add('active');
+                        return;
                     }
 
-                    const data = await resp.json();
+                    simModal.classList.add('active');
+                    const termOutput = document.getElementById('terminal-output');
+                    termOutput.innerHTML = '<div class="log-line system">> Menghubungkan ke secure-extraction pipeline...</div>';
+                    termOutput.innerHTML += `<div class="log-line">> Target: ${url}</div>`;
 
-                    termOutput.innerHTML += `<div class="log-line success">> Berhasil: ${data.reviews.length} data telah selesai diunduh & dianalisa secara total.</div>`;
-                    if (data.reviews.length < scrapingLimit && scrapingLimit !== 0) {
-                        termOutput.innerHTML += `<div class="log-line warning">> Info: Hanya berhasil mengambil ${data.reviews.length} data (kemungkinan data sudah habis atau dibatasi platform).</div>`;
+                    // Hide limit controls IMMEDIATELY
+                    document.getElementById('scrape-limit-dropdown').style.display = 'none';
+                    const customWrap = document.getElementById('custom-limit-wrapper');
+                    if (customWrap) customWrap.style.display = 'none';
+
+                    if (scrapingLimit === 0) {
+                        termOutput.innerHTML += `<div class="log-line warning">> Mode Tanpa Batas Aktif: Mengambil SEMUA data yang tersedia...</div>`;
+                        termOutput.innerHTML += `<div class="log-line info">> Ini mungkin memakan waktu lebih lama tergantung volume platform.</div>`;
+                    } else {
+                        termOutput.innerHTML += `<div class="log-line warning">> Info: Target Maksimal ${scrapingLimit} data.</div>`;
+                        if (scrapingLimit > 500) {
+                            termOutput.innerHTML += `<div class="log-line info">> Proses ratusan/ribuan data mungkin memakan waktu lebih lama. Mohon tetap di halaman ini...</div>`;
+                        }
                     }
-                    termOutput.innerHTML += '<div class="log-line info">> Memetakan landscape sentimen & merender visual...</div>';
 
-                    setTimeout(() => {
-                        document.body.classList.remove('hero-mode');
-                        document.getElementById('dashboard-wrapper')?.classList.add('active'); // legacy wrapper check
-                        simModal.classList.remove('active');
-                        loadDashboardData(data);
+                    // Create placeholder line for real-time progress
+                    termOutput.innerHTML += `<div class="log-line info">> Waktu Berjalan: <span id="scrape-timer">00:00</span></div>`;
+                    termOutput.innerHTML += `<div class="log-line system" id="progress-line">> <span id="progress-status">Menghubungkan ke API...</span> (<span id="progress-count">0</span> ulasan ditarik)</div>`;
 
-                        let plat = 'Global Source';
-                        let iconClass = 'fa-solid fa-globe';
+                    // Start Timer
+                    scrapeStartTime = Date.now();
+                    const timerEl = document.getElementById('scrape-timer');
+                    scrapingTimer = setInterval(() => {
+                        const diff = Math.floor((Date.now() - scrapeStartTime) / 1000);
+                        const mins = String(Math.floor(diff / 60)).padStart(2, '0');
+                        const secs = String(diff % 60).padStart(2, '0');
+                        if (timerEl) timerEl.innerText = `${mins}:${secs}`;
 
-                        if (url.includes('play.google.com') || url.includes('google.com/store')) {
-                            plat = 'Google Play Store';
-                            iconClass = 'fa-brands fa-google-play';
+                        // Show notification bar after 60s
+                        if (diff === 60) {
+                            document.getElementById('stop-notification-bar').style.bottom = '0';
                         }
-                        else if (url.includes('youtube.com') || url.includes('youtu.be')) {
-                            plat = 'YouTube';
-                            iconClass = 'fa-brands fa-youtube';
-                        }
-                        else if (url.includes('reddit.com') || url.includes('redd.it')) {
-                            plat = 'Reddit';
-                            iconClass = 'fa-brands fa-reddit-alien';
-                        }
-
-                        const platIndicator = document.getElementById('detected-platform');
-                        platIndicator.style.opacity = '1';
-                        platIndicator.innerHTML = `<i class="${iconClass}"></i> Analisa Data dari: ${plat}`;
-
-                        document.getElementById('start-analysis-btn').style.display = 'none';
-                        document.getElementById('reset-analysis-btn').style.display = 'inline-block';
                     }, 1000);
 
-                } catch (e) {
-                    termOutput.innerHTML += `<div class="log-line" style="color:#f87171">> Failure: ${e.message}</div>`;
-                }
-            });
+                    // Stop Button Action
+                    document.getElementById('noti-stop-btn').onclick = async () => {
+                        document.getElementById('stop-notification-bar').style.bottom = '-100px';
+                        termOutput.innerHTML += `<div class="log-line warning">> Mengirimkan sinyal stop. Segera memproses data yang sudah ada...</div>`;
+                        try {
+                            await fetch(`${API_BASE_URL}/api/stop`, { method: 'POST' });
+                        } catch (e) { console.error("Stop error", e); }
+                    };
 
-            document.getElementById('reset-analysis-btn').addEventListener('click', () => {
-                document.body.classList.add('hero-mode');
-                document.getElementById('post-url').value = '';
-                document.getElementById('detected-platform').style.opacity = '0';
-                document.getElementById('start-analysis-btn').style.display = 'inline-block';
-                document.getElementById('reset-analysis-btn').style.display = 'none';
+                    document.getElementById('noti-continue-btn').onclick = () => {
+                        document.getElementById('stop-notification-bar').style.bottom = '-100px';
+                    };
 
-                // Show limit controls back
-                document.getElementById('scrape-limit-dropdown').style.display = 'block';
-            });
+                    // Start polling progress every 1 second
+                    let isPolling = true;
+                    const pStatus = document.getElementById('progress-status');
+                    const pollInterval = setInterval(async () => {
+                        if (!isPolling) return clearInterval(pollInterval);
+                        try {
+                            const progResp = await fetch(`${API_BASE_URL}/api/progress`);
+                            if (progResp.ok) {
+                                const progData = await progResp.json();
+                                if (pStatus) pStatus.innerText = 'Mengambil data:';
+                                const pCount = document.getElementById('progress-count');
+                                if (pCount && progData.fetched !== undefined) {
+                                    pCount.innerText = progData.fetched;
+                                }
+                            }
+                        } catch (e) {
+                            // ignore polling errors
+                        }
+                    }, 1000);
 
-            // --- View More Reviews ---
-            document.getElementById('view-more-reviews-btn').addEventListener('click', () => {
-                if (!currentAnalysisData) return;
-                const list = document.getElementById('all-reviews-list');
-                list.innerHTML = '';
-                currentAnalysisData.reviews.forEach(rv => {
-                    const info = getReviewTypeInfo(rv.type);
-                    const replyStyle = rv.is_reply ? 'margin-left: 25px; border-left: 2px solid rgba(129,140,248,0.3); padding-left: 10px;' : '';
-                    const replyBadge = rv.is_reply ? ' <span style="font-size:0.72rem; color:#818cf8;"><i class="fa-solid fa-reply"></i> Balasan</span>' : '';
-                    const votesHtml = rv.votes ? ` <span style="font-size:0.75rem; color:var(--text-muted);"><i class="fa-solid fa-thumbs-up"></i> ${rv.votes}</span>` : '';
-                    list.insertAdjacentHTML('beforeend', `
+                    try {
+                        const resp = await fetch(`${API_BASE_URL}/api/analyze`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ url: url, count: parseInt(scrapingLimit) })
+                        });
+
+                        isPolling = false; // Stop polling
+                        clearInterval(scrapingTimer);
+                        document.getElementById('stop-notification-bar').style.bottom = '-100px';
+
+                        if (!resp.ok) {
+                            const errorText = await resp.text();
+                            let errorMsg = "Terjadi kesalahan pada server.";
+                            try {
+                                const errorObj = JSON.parse(errorText);
+                                errorMsg = errorObj.error || errorObj.message || errorMsg;
+                            } catch (parseErr) {
+                                // If not JSON, use the status text or a snippet of the response
+                                errorMsg = `Server Error (${resp.status}): ${errorText.substring(0, 50)}${errorText.length > 50 ? '...' : ''}`;
+                            }
+                            throw new Error(errorMsg);
+                        }
+
+                        const data = await resp.json();
+
+                        termOutput.innerHTML += `<div class="log-line success">> Berhasil: ${data.reviews.length} data telah selesai diunduh & dianalisa secara total.</div>`;
+                        if (data.reviews.length < scrapingLimit && scrapingLimit !== 0) {
+                            termOutput.innerHTML += `<div class="log-line warning">> Info: Hanya berhasil mengambil ${data.reviews.length} data (kemungkinan data sudah habis atau dibatasi platform).</div>`;
+                        }
+                        termOutput.innerHTML += '<div class="log-line info">> Memetakan landscape sentimen & merender visual...</div>';
+
+                        setTimeout(() => {
+                            document.body.classList.remove('hero-mode');
+                            document.getElementById('dashboard-wrapper')?.classList.add('active'); // legacy wrapper check
+                            simModal.classList.remove('active');
+                            loadDashboardData(data);
+
+                            let plat = 'Global Source';
+                            let iconClass = 'fa-solid fa-globe';
+
+                            if (url.includes('play.google.com') || url.includes('google.com/store')) {
+                                plat = 'Google Play Store';
+                                iconClass = 'fa-brands fa-google-play';
+                            }
+                            else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                                plat = 'YouTube';
+                                iconClass = 'fa-brands fa-youtube';
+                            }
+                            else if (url.includes('reddit.com') || url.includes('redd.it')) {
+                                plat = 'Reddit';
+                                iconClass = 'fa-brands fa-reddit-alien';
+                            }
+
+                            const platIndicator = document.getElementById('detected-platform');
+                            platIndicator.style.opacity = '1';
+                            platIndicator.innerHTML = `<i class="${iconClass}"></i> Analisa Data dari: ${plat}`;
+
+                            document.getElementById('start-analysis-btn').style.display = 'none';
+                            document.getElementById('reset-analysis-btn').style.display = 'inline-block';
+                        }, 1000);
+
+                    } catch (e) {
+                        isPolling = false;
+                        clearInterval(scrapingTimer);
+                        document.getElementById('stop-notification-bar').style.bottom = '-100px';
+                        termOutput.innerHTML += `<div class="log-line" style="color:#f87171">> Failure: ${e.message}</div>`;
+                    }
+                });
+
+                document.getElementById('reset-analysis-btn').addEventListener('click', () => {
+                    document.body.classList.add('hero-mode');
+                    document.getElementById('post-url').value = '';
+                    document.getElementById('detected-platform').style.opacity = '0';
+                    document.getElementById('start-analysis-btn').style.display = 'inline-block';
+                    document.getElementById('reset-analysis-btn').style.display = 'none';
+
+                    // Show limit controls back
+                    document.getElementById('scrape-limit-dropdown').style.display = 'block';
+                });
+
+                // --- View More Reviews ---
+                document.getElementById('view-more-reviews-btn').addEventListener('click', () => {
+                    if (!currentAnalysisData) return;
+                    const list = document.getElementById('all-reviews-list');
+                    list.innerHTML = '';
+                    currentAnalysisData.reviews.forEach(rv => {
+                        const info = getReviewTypeInfo(rv.type);
+                        const replyStyle = rv.is_reply ? 'margin-left: 25px; border-left: 2px solid rgba(129,140,248,0.3); padding-left: 10px;' : '';
+                        const replyBadge = rv.is_reply ? ' <span style="font-size:0.72rem; color:#818cf8;"><i class="fa-solid fa-reply"></i> Balasan</span>' : '';
+                        const votesHtml = rv.votes ? ` <span style="font-size:0.75rem; color:var(--text-muted);"><i class="fa-solid fa-thumbs-up"></i> ${rv.votes}</span>` : '';
+                        list.insertAdjacentHTML('beforeend', `
                         <div style="padding: 15px 0; border-bottom: 1px solid rgba(148, 163, 184, 0.1); ${replyStyle}">
                             <strong>${rv.author}</strong> <small style="color: var(--text-muted)">(${rv.date})</small>${replyBadge}${votesHtml}<br>
                             <p style="margin: 5px 0">${rv.text}</p>
                             <span class="review-badge ${info.badge}">${info.label}</span>
                         </div>
                     `);
+                    });
+                    reviewsModal.classList.add('active');
                 });
-                reviewsModal.classList.add('active');
-            });
 
-            // --- Exports ---
-            document.getElementById('export-csv-btn').addEventListener('click', () => {
-                if (!currentAnalysisData) return;
-                let csv = 'Author,Date,Text,Sentiment,Rating\n';
-                currentAnalysisData.reviews.forEach(r => {
-                    csv += `"${r.author}","${r.date}","${r.text.replace(/"/g, '""')}","${r.type}","${r.rating || ''}"\n`;
-                });
-                const blob = new Blob([csv], { type: 'text/csv' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `sentiment_export_${Date.now()}.csv`;
-                a.click();
-            });
-
-            document.getElementById('export-png-btn').addEventListener('click', () => {
-                const target = document.getElementById('export-keywords-card');
-                const isLight = document.documentElement.classList.contains('light-mode');
-                html2canvas(target, { backgroundColor: isLight ? '#ffffff' : '#0f172a' }).then(canvas => {
+                // --- Exports ---
+                document.getElementById('export-csv-btn').addEventListener('click', () => {
+                    if (!currentAnalysisData) return;
+                    let csv = 'Author,Date,Text,Sentiment,Rating\n';
+                    currentAnalysisData.reviews.forEach(r => {
+                        csv += `"${r.author}","${r.date}","${r.text.replace(/"/g, '""')}","${r.type}","${r.rating || ''}"\n`;
+                    });
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
-                    a.href = canvas.toDataURL();
-                    a.download = `keywords_snapshot_${Date.now()}.png`;
+                    a.href = url;
+                    a.download = `sentiment_export_${Date.now()}.csv`;
                     a.click();
                 });
-            });
 
-            document.getElementById('export-txt-btn').addEventListener('click', () => {
-                if (!currentAnalysisData) return;
-                let txt = "SENTIMENT ANALYSIS REPORT\n=========================\n\n";
-                txt += `Source: ${document.getElementById('detected-platform').innerText}\n`;
-                txt += `Total Items: ${currentAnalysisData.total}\n\n`;
-                txt += "Top Keywords:\n";
-                currentAnalysisData.keywords.forEach(kw => txt += `- ${kw.word}: ${kw.count}\n`);
-                const blob = new Blob([txt], { type: 'text/plain' });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `analysis_report.txt`;
-                a.click();
-            });
-
-            // --- Word Cloud ---
-            document.getElementById('export-cloud-btn').addEventListener('click', () => {
-                if (!currentAnalysisData || !currentAnalysisData.extra_stats.wordcloud_img) return;
-                cloudModal.classList.add('active');
-                renderWordCloud(currentAnalysisData.extra_stats.wordcloud_img);
-            });
-
-            function renderWordCloud(base64Str) {
-                const img = document.getElementById('cloud-image');
-                img.src = base64Str;
-            }
-
-            document.getElementById('close-cloud-modal').addEventListener('click', () => cloudModal.classList.remove('active'));
-
-            // Remove "Acak Posisi" as it's static base64 now
-            const regenBtn = document.getElementById('regenerate-cloud-btn');
-            if (regenBtn) regenBtn.style.display = 'none';
-
-            document.getElementById('download-cloud-btn').addEventListener('click', () => {
-                const a = document.createElement('a');
-                a.href = document.getElementById('cloud-image').src;
-                a.download = `wordcloud_python_${Date.now()}.png`;
-                a.click();
-            });
-
-            // --- Modal Helpers & Terminal Actions ---
-            // Generic window action setup for any modal with dots
-            function setupModalWindowActions(overlayId, dotPrefix) {
-                const overlay = document.getElementById(overlayId);
-                const box = overlay ? overlay.querySelector('.terminal-box') : null;
-                const closeBtn = document.getElementById(`${dotPrefix}-dot-close`);
-                const minBtn = document.getElementById(`${dotPrefix}-dot-min`);
-                const maxBtn = document.getElementById(`${dotPrefix}-dot-max`);
-
-                if (closeBtn && overlay) {
-                    closeBtn.addEventListener('click', () => {
-                        overlay.classList.remove('active', 'minimized-bg');
-                        if (box) box.classList.remove('minimized', 'fullscreen');
+                document.getElementById('export-png-btn').addEventListener('click', () => {
+                    const target = document.getElementById('export-keywords-card');
+                    const isLight = document.documentElement.classList.contains('light-mode');
+                    html2canvas(target, { backgroundColor: isLight ? '#ffffff' : '#0f172a' }).then(canvas => {
+                        const a = document.createElement('a');
+                        a.href = canvas.toDataURL();
+                        a.download = `keywords_snapshot_${Date.now()}.png`;
+                        a.click();
                     });
-                }
-                if (minBtn && box && overlay) {
-                    minBtn.addEventListener('click', () => {
-                        box.classList.remove('fullscreen');
-                        box.classList.toggle('minimized');
-                        overlay.classList.toggle('minimized-bg', box.classList.contains('minimized'));
-                    });
-                }
-                if (maxBtn && box && overlay) {
-                    maxBtn.addEventListener('click', () => {
-                        box.classList.remove('minimized');
-                        overlay.classList.remove('minimized-bg');
-                        box.classList.toggle('fullscreen');
-                    });
-                }
-            }
+                });
 
-            // Setup for Terminal modal
-            setupModalWindowActions('simulation-modal', 'sim');
-            // Setup for Reviews modal
-            setupModalWindowActions('reviews-modal', 'rev');
+                document.getElementById('export-txt-btn').addEventListener('click', () => {
+                    if (!currentAnalysisData) return;
+                    let txt = "SENTIMENT ANALYSIS REPORT\n=========================\n\n";
+                    txt += `Source: ${document.getElementById('detected-platform').innerText}\n`;
+                    txt += `Total Items: ${currentAnalysisData.total}\n\n`;
+                    txt += "Top Keywords:\n";
+                    currentAnalysisData.keywords.forEach(kw => txt += `- ${kw.word}: ${kw.count}\n`);
+                    const blob = new Blob([txt], { type: 'text/plain' });
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = `analysis_report.txt`;
+                    a.click();
+                });
 
-            // Error modal & Mengerti button
-            [document.getElementById('err-dot-close'), document.getElementById('btn-mengerti')].forEach(b => {
-                if (b) b.addEventListener('click', () => {
-                    const overlay = b.closest('.modal-overlay');
-                    if (overlay) {
-                        overlay.classList.remove('active', 'minimized-bg');
+                // --- Word Cloud ---
+                document.getElementById('export-cloud-btn').addEventListener('click', () => {
+                    if (!currentAnalysisData || !currentAnalysisData.extra_stats.wordcloud_img) return;
+                    cloudModal.classList.add('active');
+                    renderWordCloud(currentAnalysisData.extra_stats.wordcloud_img);
+                });
+
+                function renderWordCloud(base64Str) {
+                    const img = document.getElementById('cloud-image');
+                    img.src = base64Str;
+                }
+
+                document.getElementById('close-cloud-modal').addEventListener('click', () => cloudModal.classList.remove('active'));
+
+                // Remove "Acak Posisi" as it's static base64 now
+                const regenBtn = document.getElementById('regenerate-cloud-btn');
+                if (regenBtn) regenBtn.style.display = 'none';
+
+                document.getElementById('download-cloud-btn').addEventListener('click', () => {
+                    const a = document.createElement('a');
+                    a.href = document.getElementById('cloud-image').src;
+                    a.download = `wordcloud_python_${Date.now()}.png`;
+                    a.click();
+                });
+
+                // --- Modal Helpers & Terminal Actions ---
+                // Generic window action setup for any modal with dots
+                function setupModalWindowActions(overlayId, dotPrefix) {
+                    const overlay = document.getElementById(overlayId);
+                    const box = overlay ? overlay.querySelector('.terminal-box') : null;
+                    const closeBtn = document.getElementById(`${dotPrefix}-dot-close`);
+                    const minBtn = document.getElementById(`${dotPrefix}-dot-min`);
+                    const maxBtn = document.getElementById(`${dotPrefix}-dot-max`);
+
+                    if (closeBtn && overlay) {
+                        closeBtn.addEventListener('click', () => {
+                            overlay.classList.remove('active', 'minimized-bg');
+                            if (box) box.classList.remove('minimized', 'fullscreen');
+                        });
                     }
+                    if (minBtn && box && overlay) {
+                        minBtn.addEventListener('click', () => {
+                            box.classList.remove('fullscreen');
+                            box.classList.toggle('minimized');
+                            overlay.classList.toggle('minimized-bg', box.classList.contains('minimized'));
+                        });
+                    }
+                    if (maxBtn && box && overlay) {
+                        maxBtn.addEventListener('click', () => {
+                            box.classList.remove('minimized');
+                            overlay.classList.remove('minimized-bg');
+                            box.classList.toggle('fullscreen');
+                        });
+                    }
+                }
+
+                // Setup for Terminal modal
+                setupModalWindowActions('simulation-modal', 'sim');
+                // Setup for Reviews modal
+                setupModalWindowActions('reviews-modal', 'rev');
+
+                // Error modal & Mengerti button
+                [document.getElementById('err-dot-close'), document.getElementById('btn-mengerti')].forEach(b => {
+                    if (b) b.addEventListener('click', () => {
+                        const overlay = b.closest('.modal-overlay');
+                        if (overlay) {
+                            overlay.classList.remove('active', 'minimized-bg');
+                        }
+                    });
                 });
             });
-        });
-    </script>
+        </script>
 
 </body>
 
 </html>
-
