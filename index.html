@@ -2106,8 +2106,20 @@
 
                     isPolling = false; // Stop polling
 
+                    if (!resp.ok) {
+                        const errorText = await resp.text();
+                        let errorMsg = "Terjadi kesalahan pada server.";
+                        try {
+                            const errorObj = JSON.parse(errorText);
+                            errorMsg = errorObj.error || errorObj.message || errorMsg;
+                        } catch (parseErr) {
+                            // If not JSON, use the status text or a snippet of the response
+                            errorMsg = `Server Error (${resp.status}): ${errorText.substring(0, 50)}${errorText.length > 50 ? '...' : ''}`;
+                        }
+                        throw new Error(errorMsg);
+                    }
+
                     const data = await resp.json();
-                    if (data.error) throw new Error(data.error);
 
                     termOutput.innerHTML += `<div class="log-line success">> Berhasil: ${data.reviews.length} data telah selesai diunduh & dianalisa secara total.</div>`;
                     if (data.reviews.length < scrapingLimit && scrapingLimit !== 0) {
