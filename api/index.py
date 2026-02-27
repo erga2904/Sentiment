@@ -343,6 +343,7 @@ def get_youtube_data(url, count_req=100):
     import time
     start_time = time.time()
     MAX_SCRAPE_SECONDS = 50 # Safety break for hosted environments (e.g. Vercel 60s limit)
+    target_count = count_req if count_req > 0 else 100000
 
     try:
         if not YoutubeCommentDownloader:
