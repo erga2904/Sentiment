@@ -18,8 +18,7 @@ except ImportError:
 app = Flask(__name__)
 CORS(app)  # Allow frontend to access the API
 
-progress_store = {'fetched': 0}
-STOP_SIGNAL = False
+progress_store = {'fetched': 0, 'stop': False}
 
 def generate_wordcloud_base64(word_freq_dict):
     """
@@ -267,8 +266,7 @@ def get_playstore_data(app_id, count=100):
             
         # Continuation loop with graceful exception handling
         while len(formatted_reviews) < target_count:
-            if not continuation_token or STOP_SIGNAL:
-                if STOP_SIGNAL: print("PlayStore Scraping stopped by user signal.")
+            if not continuation_token or progress_store.get('stop'):
                 break
             
             print(f"Fetching continuation for PlayStore (Current: {len(formatted_reviews)})...")
@@ -373,7 +371,7 @@ def get_youtube_video_info(url):
 def get_youtube_data(url, count_req=100):
     import time
     start_time = time.time()
-    MAX_SCRAPE_SECONDS = 300 # Safety break for hosted environments
+    MAX_SCRAPE_SECONDS = 300 # Increased to 5 minutes for large scrapes
     target_count = count_req if count_req > 0 else 100000
 
     try:
@@ -391,8 +389,7 @@ def get_youtube_data(url, count_req=100):
                 generator = downloader.get_comments_from_url(url, sort_by=sort_mode)
                 for comment in generator:
                     # Safety Break 1: Requested count reached
-                    if len(formatted_reviews) >= target_count or STOP_SIGNAL:
-                        if STOP_SIGNAL: print("YouTube Scraping stopped by user signal.")
+                    if len(formatted_reviews) >= target_count or progress_store.get('stop'):
                         break
                     
                     # Safety Break 2: Time limit reached (for hosting stability)
@@ -480,8 +477,7 @@ def get_reddit_data(url, count_req=100):
                             'author': comment.get('author', 'Anonymous'),
                             'date': 'Hari ini'
                         })
-                if len(formatted_reviews) >= target_count or STOP_SIGNAL:
-                    if STOP_SIGNAL: print("Reddit Scraping stopped by user signal.")
+                if len(formatted_reviews) >= target_count or progress_store.get('stop'):
                     break
         except Exception as e:
             print(f"Safe break - Reddit scraped {len(formatted_reviews)} before error: {e}")
@@ -556,14 +552,16 @@ def status():
 @app.route('/progress')
 @app.route('/api/progress')
 def progress():
-    return jsonify({'fetched': progress_store.get('fetched', 0)})
+    return jsonify({
+        'fetched': progress_store.get('fetched', 0),
+        'stop': progress_store.get('stop', False)
+    })
 
 @app.route('/stop', methods=['POST'])
 @app.route('/api/stop', methods=['POST'])
 def stop_scraping():
-    global STOP_SIGNAL
-    STOP_SIGNAL = True
-    return jsonify({'status': 'stopping'})
+    progress_store['stop'] = True
+    return jsonify({'status': 'stopping', 'message': 'Stop signal received'})
 
 @app.route('/analyze', methods=['POST'])
 @app.route('/api/analyze', methods=['POST'])
@@ -578,7 +576,7 @@ def analyze():
         return jsonify({'error': 'URL is required'}), 400
 
     progress_store['fetched'] = 0
-    STOP_SIGNAL = False
+    progress_store['stop'] = False
 
     # Determine platform
     if 'play.google.com' in url:
