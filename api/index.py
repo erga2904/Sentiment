@@ -7,9 +7,52 @@ import re
 import collections
 import random
 from datetime import datetime
+import io
+import base64
+from wordcloud import WordCloud
+try:
+    from youtube_comment_downloader import YoutubeCommentDownloader
+except ImportError:
+    YoutubeCommentDownloader = None
 
 app = Flask(__name__)
 CORS(app)  # Allow frontend to access the API
+
+progress_store = {'fetched': 0}
+
+def generate_wordcloud_base64(word_freq_dict):
+    """
+    Generate a WordCloud image from a dictionary of word frequencies
+    and return it as a base64 encoded string.
+    """
+    if not word_freq_dict:
+        return None
+        
+    try:
+        # Create WordCloud object with basic styling to match UI
+        wc = WordCloud(
+            width=800, 
+            height=400, 
+            background_color='#0f172a', # Match UI dark theme background
+            colormap='cool', # Built-in matplotlib colormap
+            max_words=100,
+            prefer_horizontal=0.7
+        )
+        
+        # Generate word cloud from frequencies
+        wc.generate_from_frequencies(word_freq_dict)
+        
+        # Save to BytesIO buffer
+        img_buffer = io.BytesIO()
+        wc.to_image().save(img_buffer, format='PNG')
+        img_buffer.seek(0)
+        
+        # Encode to base64
+        base64_encoded = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
+        return f"data:image/png;base64,{base64_encoded}"
+    except Exception as e:
+        print(f"Error generating wordcloud: {e}")
+        return None
 
 def clean_text(text):
     # Basic text cleaning: lowercase and remove non-alphanumeric chars
@@ -26,8 +69,16 @@ def analyze_sentiment_and_keywords(tweets_or_reviews):
     for the portfolio demo, we'll use a basic dictionary approach for Indo + textblob.
     """
     
-    indo_pos = ['bagus', 'keren', 'mantap', 'suka', 'terbaik', 'baik', 'membantu', 'mudah', 'lancar', 'cepat', 'good', 'love', 'nice']
-    indo_neg = ['jelek', 'buruk', 'error', 'lambat', 'susah', 'berat', 'ngebug', 'bug', 'kecewa', 'kurang', 'iklan', 'bad', 'slow']
+    indo_pos = [
+        'bagus', 'keren', 'mantap', 'suka', 'terbaik', 'baik', 'membantu', 'mudah', 'lancar', 'cepat', 
+        'good', 'love', 'nice', 'bermanfaat', 'informatif', 'lucu', 'edukatif', 'semangat', 'menarik', 
+        'inspirasi', 'berguna', 'rekomendasi', 'kece', 'setuju', 'keren', 'keren banget', 'makasih', 
+        'terima kasih', 'thanks', 'sip', 'jos', 'top', 'keren bgt', 'mantul'
+    ]
+    indo_neg = [
+        'jelek', 'buruk', 'error', 'lambat', 'susah', 'berat', 'ngebug', 'bug', 'kecewa', 'kurang', 
+        'iklan', 'bad', 'slow', 'kecewa', 'parah', 'hancur', 'rusak', 'sampah', 'penipu', 'bohong'
+    ]
 
     pos_count = 0
     neg_count = 0
@@ -56,6 +107,9 @@ def analyze_sentiment_and_keywords(tweets_or_reviews):
             'seperti', 'setiap', 'lebih', 'cuma', 'hanya', 'bikin', 'malah', 'jangan', 'belum',
             'terus', 'emang', 'gimana', 'kenapa', 'kapan', 'dimana', 'siapa', 'mana', 'apa', 'dulu',
             'waktu', 'pas', 'sekali', 'tolong', 'mohon', 'banyak', 'sekarang', 'tiap', 'per', 'ke',
+            'kita', 'oleh', 'bagi', 'sebab', 'agar', 'supaya', 'meski', 'jika', 'sejak', 'hingga',
+            'serta', 'yaitu', 'yakni', 'adalah', 'ialah', 'merupakan', 'secara', 'paling', 'agak',
+            'biasa', 'tersebut', 'yakni', 'kok', 'loh', 'nah', 'hal', 'gitu', 'amat', 'tuh',
             # English
             'the', 'a', 'is', 'to', 'and', 'of', 'in', 'it', 'for', 'on', 'with', 'as', 'at',
             'by', 'an', 'be', 'this', 'that', 'are', 'was', 'were', 'been', 'have', 'has', 'had',
@@ -72,7 +126,12 @@ def analyze_sentiment_and_keywords(tweets_or_reviews):
             'couldn', 'wouldn', 'shouldn', 'much', 'many', 'well', 'way', 'make', 'made',
             'thing', 'things', 'know', 'think', 'want', 'come', 'take', 'use', 'used',
         ]
-        filtered_words = [w for w in words if w not in stopwords and len(w) > 2]
+        # Pre-process for faster lookup
+        indo_pos_set = set(indo_pos)
+        indo_neg_set = set(indo_neg)
+        stop_set = set(stopwords)
+
+        filtered_words = [w for w in words if w not in stop_set and len(w) > 2]
         all_words.extend(filtered_words)
 
         rating = item.get('rating')
@@ -90,29 +149,28 @@ def analyze_sentiment_and_keywords(tweets_or_reviews):
             # Sentiment scoring
             score = 0
             for w in filtered_words:
-                if w in indo_pos: score += 1
-                elif w in indo_neg: score -= 1
+                if w in indo_pos_set: score += 1
+                elif w in indo_neg_set: score -= 1
             
-            # fallback to textblob
-            tb = TextBlob(text)
-            tb_pol = tb.sentiment.polarity
-            
-            if score > 0 or tb_pol > 0.1:
+            if score > 0:
                 sentiment = 'pos'
                 pos_count += 1
-            elif score < 0 or tb_pol < -0.1:
+            elif score < 0:
                 sentiment = 'neg'
                 neg_count += 1
             else:
                 sentiment = 'neu'
                 neu_count += 1
-                
+
         processed_reviews.append({
+            'text': text,
             'author': author,
             'date': date_str,
-            'text': text,
+            'rating': rating,
             'type': sentiment,
-            'rating': item.get('rating', None)
+            'is_reply': item.get('is_reply', False),
+            'votes': item.get('votes', 0),
+            'cid': item.get('cid', '')
         })
 
     total = len(tweets_or_reviews)
@@ -127,6 +185,10 @@ def analyze_sentiment_and_keywords(tweets_or_reviews):
     word_counts = collections.Counter(all_words)
     top_8 = word_counts.most_common(8)
     keywords = [{'word': w[0], 'count': w[1]} for w in top_8]
+    
+    # Generate WordCloud base64 string directly from python
+    wc_frequencies = {word: count for word, count in word_counts.items()}
+    wordcloud_b64 = generate_wordcloud_base64(wc_frequencies)
     
     # Return all reviews (frontend will handle slicing and "View More" modal)
     recent_reviews = processed_reviews
@@ -166,24 +228,29 @@ def analyze_sentiment_and_keywords(tweets_or_reviews):
         'top_keyword': top_keyword,
         'top_keyword_count': top_keyword_count,
         'total_words': sum(review_lengths),
-        'unique_authors': len(set(r['author'] for r in processed_reviews))
+        'unique_authors': len(set(r['author'] for r in processed_reviews)),
+        'wordcloud_img': wordcloud_b64
     }
 
     return [pos_pct, neu_pct, neg_pct], keywords, recent_reviews, extra_stats
 
-def get_playstore_data(app_id):
+def get_playstore_data(app_id, count=100):
+    # If count is 0, we treat it as "unlimited" with a high safety cap
+    target_count = count if count > 0 else 100000
+    
     try:
         result, continuation_token = reviews(
             app_id,
-            lang='id', # defaults to indonesian
+            lang='id', 
             country='id', 
             sort=Sort.NEWEST,
-            count=100
+            count=199 if count == 0 else min(count, 199) # Safe initial batch size max 199
         )
         
         # Format for analysis function
         formatted_reviews = []
         for r in result:
+            progress_store['fetched'] += 1
             date_obj = r['at']
             if isinstance(date_obj, datetime):
                 date_str = date_obj.strftime("%d %b %Y")
@@ -197,60 +264,166 @@ def get_playstore_data(app_id):
                 'rating': r.get('score', None)
             })
             
+        # Continuation loop with graceful exception handling
+        while len(formatted_reviews) < target_count:
+            if not continuation_token:
+                break
+            
+            print(f"Fetching continuation for PlayStore (Current: {len(formatted_reviews)})...")
+            try:
+                result_cont, continuation_token = reviews(
+                    app_id, 
+                    continuation_token=continuation_token
+                )
+                
+                if not result_cont:
+                    break
+                    
+                for r in result_cont:
+                    if len(formatted_reviews) >= target_count:
+                        break
+                    progress_store['fetched'] += 1
+                    date_obj = r['at']
+                    date_str = date_obj.strftime("%d %b %Y") if isinstance(date_obj, datetime) else str(date_obj)
+                    formatted_reviews.append({
+                        'content': r['content'],
+                        'author': r['userName'],
+                        'date': date_str,
+                        'rating': r.get('score', None)
+                    })
+            except Exception as e:
+                print(f"Safe break - Continuation PlayStore fetched {len(formatted_reviews)} before error: {e}")
+                break # Graceful exit if rate limited
+            
         percentages, keywords, recent_reviews, extra_stats = analyze_sentiment_and_keywords(formatted_reviews)
         
         return {
             'is_mock': False,
-            'total': len(result) * random.randint(10, 50),
+            'total': len(formatted_reviews),
             'percentages': percentages,
             'keywords': keywords,
             'reviews': recent_reviews,
             'extra_stats': extra_stats
         }
     except Exception as e:
-        print(f"Error scraping PlayStore: {e}")
+        print(f"Error scraping PlayStore initially: {e}")
         return None
 
-def get_youtube_data(url):
+def get_youtube_video_info(url):
     try:
-        from youtube_comment_downloader import YoutubeCommentDownloader
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+        resp = requests.get(url, headers=headers, timeout=10)
+        if resp.status_code == 200:
+            html = resp.text
+            
+            title_match = re.search(r'<meta name="title" content="([^"]+)"', html)
+            if not title_match:
+                title_match = re.search(r'<meta property="og:title" content="([^"]+)"', html)
+            title = title_match.group(1) if title_match else "YouTube Video"
+            
+            desc_match = re.search(r'<meta name="description" content="([^"]+)"', html)
+            if not desc_match:
+                desc_match = re.search(r'<meta property="og:description" content="([^"]+)"', html)
+            description = desc_match.group(1) if desc_match else "Tidak ada deskripsi."
+            
+            thumb_match = re.search(r'<meta property="og:image" content="([^"]+)"', html)
+            thumb = thumb_match.group(1) if thumb_match else ""
+            
+            return {
+                "title": title,
+                "description": description[:350] + "..." if len(description) > 350 else description,
+                "thumbnail": thumb,
+                "url": url
+            }
+    except Exception as e:
+        print(f"Error fetching YT metadata: {e}")
+    return None
+
+def get_youtube_data(url, count_req=100):
+    import time
+    start_time = time.time()
+    MAX_SCRAPE_SECONDS = 50 # Safety break for hosted environments (e.g. Vercel 60s limit)
+
+    try:
+        if not YoutubeCommentDownloader:
+            return None
         downloader = YoutubeCommentDownloader()
         
-        # We need a clean url, but it usually handles normal urls
-        generator = downloader.get_comments_from_url(url, sort_by=0)
-        
+        seen = set()  # Deduplicate by (author, text_snippet)
         formatted_reviews = []
-        count = 0
-        for comment in generator:
-            if count >= 100:
-                break
-            text = comment.get('text', '')
-            if text:
-                formatted_reviews.append({
-                    'content': text,
-                    'author': comment.get('author', 'Anonymous'),
-                    'date': comment.get('time', 'Baru saja')
-                })
-                count += 1
+
+        def fetch_pass(sort_mode):
+            """Fetch comments with a given sort mode, deduplicating with timeout safety."""
+            nonlocal formatted_reviews, seen
+            try:
+                generator = downloader.get_comments_from_url(url, sort_by=sort_mode)
+                for comment in generator:
+                    # Safety Break 1: Requested count reached
+                    if len(formatted_reviews) >= target_count:
+                        break
+                    
+                    # Safety Break 2: Time limit reached (for hosting stability)
+                    if time.time() - start_time > MAX_SCRAPE_SECONDS:
+                        print(f"[YT] Safety Timeout! Stopping at {len(formatted_reviews)} comments to prevent host kill.")
+                        return # Exit the pass immediately
+                        
+                    text = comment.get('text', '')
+                    if text:
+                        author = comment.get('author', 'Anonymous')
+                        cid = str(comment.get('cid', ''))
+                        if cid not in seen:
+                            seen.add(cid)
+                            progress_store['fetched'] += 1
+                            
+                            # Detect reply: cid with '.' means it's a reply to a parent comment
+                            cid = comment.get('cid', '')
+                            is_reply = '.' in str(cid) if cid else False
+                            
+                            formatted_reviews.append({
+                                'content': text,
+                                'author': author,
+                                'date': comment.get('time', 'Baru saja'),
+                                'votes': comment.get('votes', 0),
+                                'is_reply': is_reply,
+                                'cid': str(cid)
+                            })
+            except Exception as e:
+                print(f"Safe break - YouTube sort={sort_mode} scraped {len(formatted_reviews)} before error: {e}")
+        
+        # Pass 1: sort_by=1 (NEWEST) — tends to return more comments
+        fetch_pass(1)
+        print(f"[YT] Pass 1 (Newest): {len(formatted_reviews)} comments")
+        
+        # Pass 2: sort_by=0 (TOP/Popular) — only if time permits and limit not reached
+        if len(formatted_reviews) < target_count and (time.time() - start_time < MAX_SCRAPE_SECONDS):
+            fetch_pass(0)
+            print(f"[YT] Pass 2 (Top): {len(formatted_reviews)} total after merge")
+                
+        if not formatted_reviews:
+            return None
                 
         percentages, keywords, recent_reviews, extra_stats = analyze_sentiment_and_keywords(formatted_reviews)
         
+        metadata = get_youtube_video_info(url)
+        
         return {
             'is_mock': False,
-            'total': len(formatted_reviews) * random.randint(3, 10),
+            'total': len(formatted_reviews),
             'percentages': percentages,
             'keywords': keywords,
             'reviews': recent_reviews,
-            'extra_stats': extra_stats
+            'extra_stats': extra_stats,
+            'metadata': metadata
         }
     except Exception as e:
-        print(f"Error scraping YouTube: {e}")
+        print(f"Error initializing YouTube scraper: {e}")
         return None
 
-def get_reddit_data(url):
+def get_reddit_data(url, count_req=100):
+    target_count = count_req if count_req > 0 else 100000
     try:
         clean_url = url.split('?')[0].rstrip('/')
-        json_url = clean_url + '.json'
+        json_url = clean_url + '.json?limit=500' # Increased safe limit for comprehensive scraping
         
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
         response = requests.get(json_url, headers=headers)
@@ -262,24 +435,32 @@ def get_reddit_data(url):
         
         formatted_reviews = []
         
-        for item in comments_data:
-            if item['kind'] == 't1': # t1 is a comment
-                comment = item['data']
-                text = comment.get('body', '')
-                if text and text != '[deleted]' and text != '[removed]':
-                    formatted_reviews.append({
-                        'content': text,
-                        'author': comment.get('author', 'Anonymous'),
-                        'date': 'Hari ini'
-                    })
-            if len(formatted_reviews) >= 100:
-                break
+        try:
+            for item in comments_data:
+                if item['kind'] == 't1': # t1 is a comment
+                    comment = item['data']
+                    text = comment.get('body', '')
+                    if text and text != '[deleted]' and text != '[removed]':
+                        progress_store['fetched'] += 1
+                        formatted_reviews.append({
+                            'content': text,
+                            'author': comment.get('author', 'Anonymous'),
+                            'date': 'Hari ini'
+                        })
+                if len(formatted_reviews) >= target_count:
+                    break
+        except Exception as e:
+            print(f"Safe break - Reddit scraped {len(formatted_reviews)} before error: {e}")
+            pass # Graceful exit
+            
+        if not formatted_reviews:
+            return None
                 
         percentages, keywords, recent_reviews, extra_stats = analyze_sentiment_and_keywords(formatted_reviews)
         
         return {
             'is_mock': False,
-            'total': len(formatted_reviews) * random.randint(2, 5),
+            'total': len(formatted_reviews),
             'percentages': percentages,
             'keywords': keywords,
             'reviews': recent_reviews,
@@ -308,21 +489,31 @@ def status():
         'message': 'Sentiment Analysis API is running.'
     })
 
+@app.route('/progress')
+@app.route('/api/progress')
+def progress():
+    return jsonify({'fetched': progress_store.get('fetched', 0)})
+
 @app.route('/analyze', methods=['POST'])
 @app.route('/api/analyze', methods=['POST'])
 def analyze():
+    global progress_store
+    
     data = request.json
     url = data.get('url', '')
+    count = int(data.get('count', 100))
     
     if not url:
         return jsonify({'error': 'URL is required'}), 400
+
+    progress_store['fetched'] = 0
 
     # Determine platform
     if 'play.google.com' in url:
         app_id = extract_app_id(url)
         if app_id:
             # REAL SCRAPING HAPPENS HERE
-            result = get_playstore_data(app_id)
+            result = get_playstore_data(app_id, count=count)
             if result:
                 # Add fake trend data since play store doesn't give historical daily sentiment easily
                 result['trendData'] = {
@@ -341,7 +532,7 @@ def analyze():
             
     # YOUTUBE
     elif 'youtube.com' in url or 'youtu.be' in url:
-        result = get_youtube_data(url)
+        result = get_youtube_data(url, count_req=count)
         if result:
             result['trendData'] = {
                 'labels': ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
@@ -357,7 +548,7 @@ def analyze():
              
     # REDDIT
     elif 'reddit.com' in url:
-        result = get_reddit_data(url)
+        result = get_reddit_data(url, count_req=count)
         if result:
             result['trendData'] = {
                 'labels': ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
@@ -384,4 +575,4 @@ def analyze():
 if __name__ == '__main__':
     print("Sentiment Analysis Backend Starting...")
     print("Ready to analyze URLs!")
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000, threaded=True)
