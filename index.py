@@ -306,8 +306,21 @@ def get_playstore_data(app_id, count=100):
             'extra_stats': extra_stats
         }
     except Exception as e:
-        print(f"Error scraping PlayStore initially: {e}")
         return None
+
+def get_playstore_info(app_id):
+    from google_play_scraper import app
+    try:
+        info = app(app_id, lang='id', country='id')
+        return {
+            "title": info.get('title', 'Google Play App'),
+            "description": info.get('descriptionShort') or info.get('description', '')[:350] + "...",
+            "thumbnail": info.get('icon', ''),
+            "url": f"https://play.google.com/store/apps/details?id={app_id}"
+        }
+    except Exception as e:
+        print(f"Error fetching PlayStore metadata: {e}")
+    return None
 
 def get_youtube_video_info(url):
     try:
@@ -337,12 +350,29 @@ def get_youtube_video_info(url):
             }
     except Exception as e:
         print(f"Error fetching YT metadata: {e}")
+    
+    # Fallback to a simpler thumbnail if regex fails
+    if "youtube.com" in url or "youtu.be" in url:
+        video_id = None
+        if "youtu.be/" in url:
+            video_id = url.split("youtu.be/")[1].split("?")[0]
+        elif "v=" in url:
+            video_id = url.split("v=")[1].split("&")[0]
+        
+        if video_id:
+            return {
+                "title": "YouTube Video",
+                "description": "Enjoy the videos and music you love, upload original content, and share it all with friends, family, and the world on YouTube.",
+                "thumbnail": f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg",
+                "url": url
+            }
     return None
 
 def get_youtube_data(url, count_req=100):
     import time
     start_time = time.time()
     MAX_SCRAPE_SECONDS = 50 # Safety break for hosted environments (e.g. Vercel 60s limit)
+    target_count = count_req if count_req > 0 else 100000
 
     try:
         if not YoutubeCommentDownloader:
@@ -470,6 +500,36 @@ def get_reddit_data(url, count_req=100):
         print(f"Error scraping Reddit: {e}")
         return None
 
+def get_reddit_info(url):
+    try:
+        clean_url = url.split('?')[0].rstrip('/')
+        json_url = clean_url + '.json'
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        resp = requests.get(json_url, headers=headers)
+        if resp.status_code == 200:
+            data = resp.json()
+            post = data[0]['data']['children'][0]['data']
+            
+            # Find a thumbnail
+            thumb = post.get('thumbnail', '')
+            if not thumb.startswith('http'):
+                # Try preview images
+                preview = post.get('preview', {}).get('images', [{}])[0].get('source', {}).get('url', '')
+                if preview:
+                    thumb = preview.replace('&amp;', '&')
+                else:
+                    thumb = ""
+            
+            return {
+                "title": post.get('title', 'Reddit Post'),
+                "description": post.get('selftext', '')[:350] + "..." if post.get('selftext') else "Reddit post by " + post.get('author', ''),
+                "thumbnail": thumb,
+                "url": url
+            }
+    except Exception as e:
+        print(f"Error fetching Reddit metadata: {e}")
+    return None
+
 def extract_app_id(url):
     """
     Extracts package name from play store URL.
@@ -524,6 +584,7 @@ def analyze():
                         {'label': 'Negatif', 'data': [random.randint(10,200) for _ in range(7)]}
                     ]
                 }
+                result['metadata'] = get_playstore_info(app_id)
                 return jsonify(result)
             else:
                  return jsonify({'error': 'Failed to scrape Play Store App. It might not exist or is region locked.'}), 404
@@ -558,6 +619,7 @@ def analyze():
                     {'label': 'Negatif', 'data': [random.randint(5,60) for _ in range(7)]}
                 ]
             }
+            result['metadata'] = get_reddit_info(url)
             return jsonify(result)
         else:
              return jsonify({'error': 'Failed to scrape Reddit Comments. Not a valid post or post is private.'}), 404
