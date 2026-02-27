@@ -1658,6 +1658,43 @@
         </div>
     </div>
 
+    <!-- CONFIRMATION MODAL -->
+    <div class="modal-overlay" id="confirm-modal" style="z-index: 21000;">
+        <div class="terminal-box"
+            style="background: var(--glass-surface); max-width: 450px; text-align: center; padding: 0;">
+            <div class="terminal-header"
+                style="background: rgba(129, 140, 248, 0.2); justify-content: space-between; border-bottom: 1px solid rgba(129, 140, 248, 0.3);">
+                <div class="terminal-dots" style="display: flex; gap: 8px;">
+                    <div class="term-dot r" id="confirm-dot-close"></div>
+                    <div class="term-dot y"></div>
+                    <div class="term-dot g"></div>
+                </div>
+                <div class="terminal-title" style="color: var(--primary-color); font-weight: 700;">
+                    <i class="fa-solid fa-circle-question"></i> Konfirmasi
+                </div>
+                <div></div>
+            </div>
+            <div class="terminal-body"
+                style="padding: 30px 20px; font-family: 'Figtree', sans-serif; color: var(--text-color);">
+                <div style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 15px;">
+                    <i class="fa-solid fa-circle-stop"></i>
+                </div>
+                <h3 style="margin-bottom: 10px; font-size: 1.15rem;">Ingin analisa komentar yang sudah di scraping?</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 25px;">
+                    Anda sedang menutup terminal. Pilih "Ya" untuk memproses data yang sudah terambil, atau "Tidak"
+                    untuk membatalkan semua.
+                </p>
+                <div style="display: flex; gap: 10px; flex-direction: column;">
+                    <button id="btn-confirm-yes" class="analyze-btn" style="width: 100%; border-radius: 8px;">Ya,
+                        Analisa Sekarang</button>
+                    <button id="btn-confirm-no" class="analyze-btn"
+                        style="width: 100%; border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text-color); border: 1px solid var(--glass-border);">Tidak,
+                        mulai dari awal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // CONFIGURATION FOR DEPLOYMENT
         const PRODUCTION_API_URL = "https://sentimentfix.vercel.app";
@@ -1682,6 +1719,9 @@
         let trendChart;
         let distChart;
         let currentAnalysisData = null;
+        let isScrapingActive = false;
+        let scrapeTimerInterval = null;
+        let scrapePollInterval = null;
 
         // Settings (Persistent)
         let scrapingLimit = localStorage.getItem('scrapeLimit') || 0;
@@ -2092,62 +2132,66 @@
                 termOutput.innerHTML += `<div class="log-line system" id="progress-line">> <span id="progress-status">Menghubungkan ke API...</span> (<span id="progress-count">0</span> ulasan ditarik) | <span id="scrape-timer">00:00</span></div>`;
 
                 // Scraping Timer Logic
+                isScrapingActive = true;
                 let seconds = 0;
-                const timerInterval = setInterval(() => {
+                if (scrapeTimerInterval) clearInterval(scrapeTimerInterval);
+                scrapeTimerInterval = setInterval(() => {
                     seconds++;
                     const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
                     const secs = String(seconds % 60).padStart(2, '0');
                     const timerEl = document.getElementById('scrape-timer');
                     if (timerEl) timerEl.innerText = `${mins}:${secs}`;
 
-                    // Show notification bar after 60 seconds
-                    if (seconds === 60) {
-                        showScrapeNotification();
-                    }
+                    if (seconds === 60) showScrapeNotification();
                 }, 1000);
 
                 function showScrapeNotification() {
-                    const notifyBar = document.createElement('div');
-                    notifyBar.id = 'scrape-notify-bar';
+                    let notifyBar = document.getElementById('scrape-notify-bar');
+                    if (!notifyBar) {
+                        notifyBar = document.createElement('div');
+                        notifyBar.id = 'scrape-notify-bar';
+                        document.body.appendChild(notifyBar);
+                    }
+                    notifyBar.style.display = 'flex';
                     notifyBar.style.cssText = `
                         position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-                        background: rgba(30, 41, 59, 0.9); backdrop-filter: blur(10px);
+                        background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px);
                         border: 1px solid var(--accent-glow); padding: 15px 25px;
                         border-radius: 12px; display: flex; align-items: center; gap: 20px;
-                        z-index: 20000; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                        z-index: 21000; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
                         animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
                     `;
                     notifyBar.innerHTML = `
-                        <div style="font-size: 0.95rem; color: var(--text-main);">
-                            <i class="fa-solid fa-hourglass-half" style="color: var(--warning); margin-right: 8px;"></i>
+                        <div style="font-size: 0.95rem; color: var(--text-main); font-family: 'Figtree', sans-serif;">
+                            <i class="fa-solid fa-hourglass-half" style="color: #fbbf24; margin-right: 8px;"></i>
                             Scraping sudah memakan waktu cukup lama, hentikan?
                         </div>
                         <div style="display: flex; gap: 10px;">
-                            <button id="btn-stop-scrape" class="analyze-btn" style="padding: 8px 15px; font-size: 0.85rem; background: var(--error);">Hentikan</button>
-                            <button id="btn-continue-scrape" class="analyze-btn" style="padding: 8px 15px; font-size: 0.85rem; background: var(--success);">Lanjutkan</button>
+                            <button id="btn-stop-scrape" class="analyze-btn" style="padding: 8px 15px; font-size: 0.85rem; background: #ef4444; border-radius: 6px; cursor: pointer; border: none; color: white;">Hentikan</button>
+                            <button id="btn-continue-scrape" class="analyze-btn" style="padding: 8px 15px; font-size: 0.85rem; background: #22c55e; border-radius: 6px; cursor: pointer; border: none; color: white;">Lanjutkan</button>
                         </div>
                     `;
-                    document.body.appendChild(notifyBar);
 
-                    document.getElementById('btn-stop-scrape').addEventListener('click', async () => {
+                    const stopBtn = document.getElementById('btn-stop-scrape');
+                    const contBtn = document.getElementById('btn-continue-scrape');
+
+                    stopBtn.onclick = async () => {
                         try {
                             await fetch(`${API_BASE_URL}/api/stop`, { method: 'POST' });
-                            notifyBar.innerHTML = '<div style="color: var(--warning);">Menghentikan proses... Harap tunggu hasil sementara.</div>';
+                            notifyBar.innerHTML = '<div style="color: #fbbf24; font-size: 0.9rem;">Menghentikan proses... Harap tunggu hasil sementara.</div>';
                         } catch (e) { console.error("Stop error:", e); }
-                    });
+                    };
 
-                    document.getElementById('btn-continue-scrape').addEventListener('click', () => {
+                    contBtn.onclick = () => {
                         notifyBar.style.display = 'none';
-                    });
+                    };
                 }
 
-                // Start polling progress every 1 second
-                let isPolling = true;
-                const pStatus = document.getElementById('progress-status');
-                const pollInterval = setInterval(async () => {
-                    if (!isPolling) {
-                        clearInterval(pollInterval);
-                        clearInterval(timerInterval);
+                if (scrapePollInterval) clearInterval(scrapePollInterval);
+                scrapePollInterval = setInterval(async () => {
+                    if (!isScrapingActive) {
+                        clearInterval(scrapePollInterval);
+                        clearInterval(scrapeTimerInterval);
                         const bar = document.getElementById('scrape-notify-bar');
                         if (bar) bar.remove();
                         return;
@@ -2156,18 +2200,13 @@
                         const progResp = await fetch(`${API_BASE_URL}/api/progress`);
                         if (progResp.ok) {
                             const progData = await progResp.json();
-                            if (pStatus) pStatus.innerText = 'Mengambil data:';
+                            const pStatusEl = document.getElementById('progress-status');
+                            if (pStatusEl) pStatusEl.innerText = 'Mengambil data:';
                             const pCount = document.getElementById('progress-count');
-                            if (pCount && progData.fetched !== undefined) {
-                                pCount.innerText = progData.fetched;
-                            }
-                            if (progData.stop) {
-                                if (pStatus) pStatus.innerText = 'Menghentikan (Sedang memproses subtotal):';
-                            }
+                            if (pCount && progData.fetched !== undefined) pCount.innerText = progData.fetched;
+                            if (progData.stop && pStatusEl) pStatusEl.innerText = 'Menghentikan (Sedang memproses subtotal):';
                         }
-                    } catch (e) {
-                        // ignore polling errors
-                    }
+                    } catch (e) { }
                 }, 1000);
 
                 try {
@@ -2177,7 +2216,7 @@
                         body: JSON.stringify({ url: url, count: parseInt(scrapingLimit) })
                     });
 
-                    isPolling = false; // Stop polling
+                    isScrapingActive = false; // Stop polling
 
                     if (!resp.ok) {
                         const errorText = await resp.text();
@@ -2343,6 +2382,11 @@
 
                 if (closeBtn && overlay) {
                     closeBtn.addEventListener('click', () => {
+                        if (overlayId === 'simulation-modal' && isScrapingActive) {
+                            // Show confirmation modal
+                            document.getElementById('confirm-modal').classList.add('active');
+                            return;
+                        }
                         overlay.classList.remove('active', 'minimized-bg');
                         if (box) box.classList.remove('minimized', 'fullscreen');
                     });
@@ -2377,6 +2421,37 @@
                     }
                 });
             });
+
+            // --- Confirm Interruption & Termination ---
+            const confirmModal = document.getElementById('confirm-modal');
+            const confirmDotClose = document.getElementById('confirm-dot-close');
+            const btnConfirmYes = document.getElementById('btn-confirm-yes');
+            const btnConfirmNo = document.getElementById('btn-confirm-no');
+
+            if (confirmDotClose) confirmDotClose.onclick = () => confirmModal.classList.remove('active');
+
+            if (btnConfirmYes) {
+                btnConfirmYes.onclick = async () => {
+                    confirmModal.classList.remove('active');
+                    // Stop backend but results will be processed by the active analyze fetch
+                    try {
+                        await fetch(`${API_BASE_URL}/api/stop`, { method: 'POST' });
+                        const termOut = document.getElementById('terminal-output');
+                        if (termOut) termOut.innerHTML += `<div class="log-line warning">> Menghentikan dan langsung memproses data sementara...</div>`;
+                    } catch (e) { console.error("Stop error:", e); }
+                };
+            }
+
+            if (btnConfirmNo) {
+                btnConfirmNo.onclick = () => {
+                    confirmModal.classList.remove('active');
+                    isScrapingActive = false; // This will trigger clearInterval in polling logic
+                    document.getElementById('simulation-modal').classList.remove('active', 'minimized-bg');
+                    document.getElementById('start-analysis-btn').style.display = 'inline-block';
+                    document.getElementById('reset-analysis-btn').style.display = 'none';
+                    document.getElementById('scrape-limit-dropdown').style.display = 'block';
+                };
+            }
         });
     </script>
 
